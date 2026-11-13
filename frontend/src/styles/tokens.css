@@ -1,0 +1,243 @@
+/*
+ * OptiAgro-Llanos · Tokens de diseño
+ * Paleta: blanco + verde menta/salvia suave como acento; verdes profundos solo
+ * para texto y botones primarios (contraste AA). Ver docs/ui/guia-de-estilo.md.
+ */
+:root {
+  color-scheme: light;
+
+  /* ---- Escala de verdes (referencia; usar los tokens semánticos de abajo) ---- */
+  --verde-25: #fafdfb;
+  --verde-50: #f6fbf7;
+  --verde-100: #e6f4ea;
+  --verde-200: #cfeadb;
+  --verde-300: #b0ddc3;
+  --verde-400: #86c9a0;
+  --verde-500: #55ab78;
+  --verde-600: #2f8f55;
+  --verde-700: #1f6b43;
+  --verde-800: #185a37;
+  --verde-900: #124a2d;
+  --verde-950: #0b2d1c;
+
+  /* ---- Color semántico (tema claro) ---- */
+  --color-fondo: #f6fbf7;
+  --color-fondo-degradado: linear-gradient(180deg, #fafdfb 0%, #f3faf5 100%);
+  --color-superficie: #ffffff;
+  --color-superficie-2: #f1f8f3;
+  --color-superficie-hover: #f3faf5;
+  --color-borde: #dfe9e2;
+  --color-borde-fuerte: #c6d6cc;
+  --color-borde-control: #7c9284;
+
+  --color-texto: #14231b;
+  --color-texto-2: #44574b;
+  --color-texto-suave: #5a6b60;
+  --color-texto-inverso: #ffffff;
+
+  --color-primario: #1f6b43;
+  --color-primario-hover: #185a37;
+  --color-primario-activo: #124a2d;
+  --color-sobre-primario: #ffffff;
+
+  --color-acento: #cfeadb;
+  --color-acento-suave: #e6f4ea;
+  --color-acento-fuerte: #86c9a0;
+  --color-enlace: #1f6b43;
+
+  --color-activo-fondo: #e6f4ea;
+  --color-activo-texto: #1b5535;
+  --color-activo-barra: #2f8f55;
+
+  --color-foco: #2f8f55;
+  --color-foco-halo: rgb(47 143 85 / 0.22);
+
+  --color-error: #b42318;
+  --color-error-fondo: #fef3f2;
+  --color-error-borde: #f6c9c4;
+  --color-aviso: #8a4b0c;
+  --color-aviso-fondo: #fff7e6;
+  --color-aviso-borde: #f3d9a4;
+  --color-info: #1d5c8a;
+  --color-info-fondo: #eef6fc;
+  --color-info-borde: #c3dcef;
+  --color-exito: #1b5535;
+  --color-exito-fondo: #e6f4ea;
+  --color-exito-borde: #b0ddc3;
+
+  --color-vidrio: rgb(255 255 255 / 0.8);
+  --color-vidrio-borde: rgb(255 255 255 / 0.7);
+  --color-vidrio-sombra: rgb(18 74 45 / 0.12);
+  --color-velo: rgb(11 45 28 / 0.38);
+  --color-brillo: rgb(255 255 255 / 0.85);
+
+  /* Marcadores del mapa (el mapa base se mantiene claro en ambos temas) */
+  --color-marcador-empresa: #2f8f55;
+  --color-marcador-planta: #14532d;
+  --color-marcador-borde: #ffffff;
+
+  /* ---- Tipografía ---- */
+  --fuente-base: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --texto-xs: 0.75rem;
+  --texto-sm: 0.875rem;
+  --texto-base: 1rem;
+  --texto-lg: 1.125rem;
+  --texto-xl: 1.375rem;
+  --texto-2xl: 1.75rem;
+  --texto-3xl: 2.375rem;
+  --peso-normal: 450;
+  --peso-medio: 550;
+  --peso-fuerte: 700;
+  --altura-linea: 1.55;
+  --altura-linea-titulo: 1.2;
+
+  /* ---- Espaciado ---- */
+  --espacio-1: 0.25rem;
+  --espacio-2: 0.5rem;
+  --espacio-3: 0.75rem;
+  --espacio-4: 1rem;
+  --espacio-5: 1.5rem;
+  --espacio-6: 2rem;
+  --espacio-7: 3rem;
+  --espacio-8: 4rem;
+
+  /* ---- Radios ---- */
+  --radio-sm: 8px;
+  --radio-md: 12px;
+  --radio-lg: 16px;
+  --radio-xl: 22px;
+  --radio-pleno: 999px;
+
+  /* ---- Sombras suaves (tinte verde) ---- */
+  --sombra-xs: 0 1px 2px rgb(20 60 35 / 0.06);
+  --sombra-sm: 0 1px 3px rgb(20 60 35 / 0.07), 0 1px 2px rgb(20 60 35 / 0.04);
+  --sombra-md: 0 6px 18px -4px rgb(20 60 35 / 0.12), 0 2px 6px rgb(20 60 35 / 0.05);
+  --sombra-lg: 0 18px 44px -12px rgb(20 60 35 / 0.2), 0 4px 12px rgb(20 60 35 / 0.06);
+  --sombra-boton: 0 1px 2px rgb(18 74 45 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.14);
+
+  /* ---- Transiciones ---- */
+  --ease: cubic-bezier(0.22, 0.7, 0.25, 1);
+  --trans-rapida: 150ms var(--ease);
+  --trans: 200ms var(--ease);
+  --trans-lenta: 320ms var(--ease);
+
+  /* ---- Capas ---- */
+  --z-mapa-controles: 500;
+  --z-barra: 900;
+  --z-menu: 1100;
+  --z-drawer-velo: 1200;
+  --z-drawer: 1210;
+  --z-saltar: 2000;
+
+  /* ---- Layout del shell ---- */
+  --alto-barra: 4rem;
+  --ancho-lateral: 16.5rem;
+  --ancho-lateral-colapsado: 4.75rem;
+  --alto-tactil: 2.75rem;
+}
+
+/* ---- Tema oscuro: preferencia del sistema (si no se fuerza el claro) ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-fondo: #0b120e;
+    --color-fondo-degradado: linear-gradient(180deg, #0d1511 0%, #0a100c 100%);
+    --color-superficie: #111b15;
+    --color-superficie-2: #162219;
+    --color-superficie-hover: #15221a;
+    --color-borde: #24352a;
+    --color-borde-fuerte: #35493c;
+    --color-borde-control: #5f7a68;
+    --color-texto: #e8f5ec;
+    --color-texto-2: #b6c9bc;
+    --color-texto-suave: #9aada1;
+    --color-texto-inverso: #0b120e;
+    --color-primario: #5cbf84;
+    --color-primario-hover: #74cc96;
+    --color-primario-activo: #8fd9ac;
+    --color-sobre-primario: #0b120e;
+    --color-acento: #1d3a29;
+    --color-acento-suave: #162b20;
+    --color-acento-fuerte: #3f8a5f;
+    --color-enlace: #8fd3a8;
+    --color-activo-fondo: #1a3a28;
+    --color-activo-texto: #bfe9cf;
+    --color-activo-barra: #5cbf84;
+    --color-foco: #7fd4a0;
+    --color-foco-halo: rgb(127 212 160 / 0.25);
+    --color-error: #ff9b8f;
+    --color-error-fondo: #2b1512;
+    --color-error-borde: #5a2a24;
+    --color-aviso: #f3c77a;
+    --color-aviso-fondo: #2a2113;
+    --color-aviso-borde: #55411f;
+    --color-info: #8cc4ec;
+    --color-info-fondo: #11202c;
+    --color-info-borde: #274459;
+    --color-exito: #bfe9cf;
+    --color-exito-fondo: #162b20;
+    --color-exito-borde: #2a4c39;
+    --color-vidrio: rgb(17 27 21 / 0.78);
+    --color-vidrio-borde: rgb(255 255 255 / 0.08);
+    --color-vidrio-sombra: rgb(0 0 0 / 0.4);
+    --color-velo: rgb(0 0 0 / 0.55);
+    --color-brillo: rgb(127 212 160 / 0.1);
+    --sombra-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+    --sombra-sm: 0 1px 3px rgb(0 0 0 / 0.45);
+    --sombra-md: 0 6px 18px -4px rgb(0 0 0 / 0.5);
+    --sombra-lg: 0 18px 44px -12px rgb(0 0 0 / 0.6);
+    --sombra-boton: 0 1px 2px rgb(0 0 0 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.2);
+  }
+}
+
+/* ---- Tema oscuro: selector manual ---- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-fondo: #0b120e;
+  --color-fondo-degradado: linear-gradient(180deg, #0d1511 0%, #0a100c 100%);
+  --color-superficie: #111b15;
+  --color-superficie-2: #162219;
+  --color-superficie-hover: #15221a;
+  --color-borde: #24352a;
+  --color-borde-fuerte: #35493c;
+  --color-borde-control: #5f7a68;
+  --color-texto: #e8f5ec;
+  --color-texto-2: #b6c9bc;
+  --color-texto-suave: #9aada1;
+  --color-texto-inverso: #0b120e;
+  --color-primario: #5cbf84;
+  --color-primario-hover: #74cc96;
+  --color-primario-activo: #8fd9ac;
+  --color-sobre-primario: #0b120e;
+  --color-acento: #1d3a29;
+  --color-acento-suave: #162b20;
+  --color-acento-fuerte: #3f8a5f;
+  --color-enlace: #8fd3a8;
+  --color-activo-fondo: #1a3a28;
+  --color-activo-texto: #bfe9cf;
+  --color-activo-barra: #5cbf84;
+  --color-foco: #7fd4a0;
+  --color-foco-halo: rgb(127 212 160 / 0.25);
+  --color-error: #ff9b8f;
+  --color-error-fondo: #2b1512;
+  --color-error-borde: #5a2a24;
+  --color-aviso: #f3c77a;
+  --color-aviso-fondo: #2a2113;
+  --color-aviso-borde: #55411f;
+  --color-info: #8cc4ec;
+  --color-info-fondo: #11202c;
+  --color-info-borde: #274459;
+  --color-exito: #bfe9cf;
+  --color-exito-fondo: #162b20;
+  --color-exito-borde: #2a4c39;
+  --color-vidrio: rgb(17 27 21 / 0.78);
+  --color-vidrio-borde: rgb(255 255 255 / 0.08);
+  --color-vidrio-sombra: rgb(0 0 0 / 0.4);
+  --color-velo: rgb(0 0 0 / 0.55);
+  --color-brillo: rgb(127 212 160 / 0.1);
+  --sombra-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+  --sombra-sm: 0 1px 3px rgb(0 0 0 / 0.45);
+  --sombra-md: 0 6px 18px -4px rgb(0 0 0 / 0.5);
+  --sombra-lg: 0 18px 44px -12px rgb(0 0 0 / 0.6);
+  --sombra-boton: 0 1px 2px rgb(0 0 0 / 0.4), inset 0 1px 0 rgb(255 255 255 / 0.2);
+}

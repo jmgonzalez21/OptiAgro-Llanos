@@ -1,0 +1,3978 @@
+openapi: 3.0.3
+info:
+  title: OptiAgro-Llanos API
+  version: 1.0.0
+  description: 'API REST de optimización de la red logística de residuos agropecuarios
+    (modelo de transporte exacto con HiGHS y algoritmo genético). Contrato entre backend
+    y frontend. Unidades: toneladas por semana, costos en COP. Autenticación: JWT
+    en la cabecera ''Authorization: Bearer <access>''. Errores 400: {"detail": str,
+    "errores": lista|dict}.'
+paths:
+  /api/v1/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      summary: Iniciar sesión (JWT)
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginRespuesta'
+          description: ''
+  /api/v1/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: Devuelve un access nuevo y un refresh NUEVO; el refresh enviado
+        queda en lista negra. Guarde siempre el refresh más reciente. Un refresh vencido,
+        revocado o de un usuario desactivado responde 401.
+      summary: Renovar el token de acceso (el refresh rota)
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshRespuesta'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: Pone el refresh en lista negra. Un refresh inválido, vencido o
+        ya revocado responde 400.
+      summary: Cerrar sesión (revoca el refresh token)
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      summary: Usuario autenticado y su rol
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+          description: ''
+    patch:
+      operationId: auth_me_partial_update
+      summary: Editar el propio perfil (nombre, apellido, email)
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPerfilActualizarRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/auth/cambiar-contrasena/:
+    post:
+      operationId: auth_cambiar_contrasena_create
+      description: Exige la contraseña actual y valida la nueva con los validadores
+        de Django (mínimo 10 caracteres, no común, no solo numérica, no parecida a
+        los datos del usuario). Revoca todas las sesiones (refresh) anteriores y devuelve
+        un par de tokens nuevo para continuar la sesión.
+      summary: Cambiar la propia contraseña
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarContrasenaRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CambiarContrasenaRespuesta'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/demo/estado/:
+    get:
+      operationId: demo_estado_retrieve
+      summary: ¿Están cargados los datos demo FICTICIOS?
+      tags:
+      - demo
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoEstado'
+          description: ''
+  /api/v1/demo/cargar/:
+    post:
+      operationId: demo_cargar_create
+      description: Crea 10 empresas, 4 plantas y 40 rutas FICTICIAS (marcadas ficticio=true).
+        Si ya estaban cargadas no modifica nada y responde 200; si las crea, 201.
+      summary: Cargar los datos de demostración FICTICIOS (administrador, idempotente)
+      tags:
+      - demo
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoCarga'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoCarga'
+          description: ''
+  /api/v1/red/matriz-costos/:
+    get:
+      operationId: red_matriz_costos_retrieve
+      summary: Matriz de costos empresa x planta
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatrizCostos'
+          description: ''
+    put:
+      operationId: red_matriz_costos_update
+      description: 'Crea o actualiza rutas por par (empresa, planta). Solo se modifican
+        los campos enviados; un costo_unitario sin distancia/tarifa anula la distancia/tarifa
+        previas. Es atómico: si una celda es inválida no se aplica ninguna.'
+      summary: Actualización masiva de la matriz de costos (administrador)
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatrizCostosEscrituraRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatrizCostos'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/optimizacion/exacto/:
+    post:
+      operationId: optimizacion_exacto_create
+      description: Resuelve el modelo de transporte. Un estado INFEASIBLE se devuelve
+        con 200; entradas inválidas con 400.
+      summary: Ejecutar el método exacto (LP, HiGHS)
+      tags:
+      - optimizacion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EjecutarExactoRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionResultado'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/optimizacion/genetico/:
+    post:
+      operationId: optimizacion_genetico_create
+      description: 'Solo modo base (oferta exacta, plantas con capacidad máxima).
+        Parámetros ajustables: población, generaciones, cruce, mutación, semilla y
+        elitismo. Con la misma semilla el resultado es reproducible.'
+      summary: Ejecutar el algoritmo genético
+      tags:
+      - optimizacion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EjecutarGeneticoRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionResultado'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/optimizacion/sensibilidad/:
+    post:
+      operationId: optimizacion_sensibilidad_create
+      description: Varía porcentualmente la oferta de empresas, la capacidad de una
+        o varias plantas, o los costos de rutas, reoptimiza cada escenario y devuelve
+        los precios sombra (duales) del caso base, el análisis de cuellos de botella
+        por planta, los RANGOS de variación (ranging de HiGHS) de ofertas, capacidades
+        y costos de ruta, y la tabla de escenarios. Cada escenario se resuelve con
+        el exacto y, por defecto (incluir_ag=true), también con el AG; incluye gap
+        %, tiempos, cambio de asignaciones y si la base óptima cambió (base_cambio).
+      summary: 'Análisis de sensibilidad: precios sombra, rangos y escenarios (exacto
+        + AG)'
+      tags:
+      - optimizacion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensibilidadSolicitudRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionSensibilidad'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/optimizacion/reporte/:
+    post:
+      operationId: optimizacion_reporte_create
+      description: Resuelve con ambos métodos y compara costo, tiempo y gap % ((AG
+        - exacto)/exacto x 100). Opcionalmente incluye el comportamiento de ambos
+        bajo escenarios de sensibilidad.
+      summary: Reporte comparativo exacto vs AG
+      tags:
+      - optimizacion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReporteSolicitudRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionReporte'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/optimizacion/escalabilidad/:
+    post:
+      operationId: optimizacion_escalabilidad_create
+      description: 'Genera redes sintéticas FICTICIAS y deterministas de tamaños crecientes
+        (por defecto 10x4, 20x6, 40x10 y 80x16 empresas x plantas), resuelve cada
+        una con el método exacto y con el AG y compara tiempo, costo y gap %. Los
+        tamaños y el trabajo total del AG están acotados (OPTIAGRO_ESCALABILIDAD_*):
+        si se exceden, 400. No usa ni modifica la red guardada.'
+      summary: Prueba de escalabilidad (redes sintéticas, exacto vs AG)
+      tags:
+      - optimizacion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscalabilidadSolicitudRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionEscalabilidad'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/empresas/:
+    get:
+      operationId: empresas_list
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Listar empresas
+      parameters:
+      - in: query
+        name: activa
+        schema:
+          type: boolean
+        description: Filtra por estado activo.
+      - name: ordering
+        required: false
+        in: query
+        description: Qué campo usar para ordenar los resultados.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un término de búsqueda.
+        schema:
+          type: string
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEmpresaList'
+          description: ''
+    post:
+      operationId: empresas_create
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Crear empresa (administrador)
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmpresaRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empresa'
+          description: ''
+  /api/v1/empresas/{id}/:
+    get:
+      operationId: empresas_retrieve
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Detalle de empresa
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este empresa.
+        required: true
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empresa'
+          description: ''
+    put:
+      operationId: empresas_update
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Reemplazar empresa (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este empresa.
+        required: true
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmpresaRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empresa'
+          description: ''
+    patch:
+      operationId: empresas_partial_update
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Editar empresa (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este empresa.
+        required: true
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEmpresaRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empresa'
+          description: ''
+    delete:
+      operationId: empresas_destroy
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Eliminar empresa y sus rutas (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este empresa.
+        required: true
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/plantas/:
+    get:
+      operationId: plantas_list
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Listar plantas
+      parameters:
+      - in: query
+        name: activa
+        schema:
+          type: boolean
+        description: Filtra por estado activo.
+      - name: ordering
+        required: false
+        in: query
+        description: Qué campo usar para ordenar los resultados.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un término de búsqueda.
+        schema:
+          type: string
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPlantaList'
+          description: ''
+    post:
+      operationId: plantas_create
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Crear planta (administrador)
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlantaRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Planta'
+          description: ''
+  /api/v1/plantas/{id}/:
+    get:
+      operationId: plantas_retrieve
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Detalle de planta
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este planta.
+        required: true
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Planta'
+          description: ''
+    put:
+      operationId: plantas_update
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Reemplazar planta (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este planta.
+        required: true
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlantaRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Planta'
+          description: ''
+    patch:
+      operationId: plantas_partial_update
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Editar planta (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este planta.
+        required: true
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPlantaRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Planta'
+          description: ''
+    delete:
+      operationId: plantas_destroy
+      description: Si cambian las coordenadas del nodo, recalcula sus rutas carretera/estimada
+        (las manuales se respetan).
+      summary: Eliminar planta y sus rutas (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este planta.
+        required: true
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/rutas/:
+    get:
+      operationId: rutas_list
+      summary: Listar rutas
+      parameters:
+      - in: query
+        name: activa
+        schema:
+          type: boolean
+        description: Filtra por estado activo.
+      - in: query
+        name: empresa
+        schema:
+          type: string
+        description: Código de empresa.
+      - name: ordering
+        required: false
+        in: query
+        description: Qué campo usar para ordenar los resultados.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      - in: query
+        name: planta
+        schema:
+          type: string
+        description: Código de planta.
+      - name: search
+        required: false
+        in: query
+        description: Un término de búsqueda.
+        schema:
+          type: string
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRutaList'
+          description: ''
+    post:
+      operationId: rutas_create
+      summary: Crear ruta (administrador)
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RutaRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ruta'
+          description: ''
+  /api/v1/rutas/recalcular-distancias/:
+    post:
+      operationId: rutas_recalcular_distancias_create
+      description: Consulta OSRM (tabla de distancias por lotes) y actualiza distancia_km
+        y el costo efectivo. Por defecto solo toca rutas con distancia_fuente carretera/estimada;
+        las manuales se respetan salvo incluir_manuales=true. Si OSRM falla se usa
+        el respaldo (línea recta x 1,3) y se informa en aviso.
+      summary: Recalcular distancias por carretera (administrador)
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecalcularDistanciasRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecalcularDistanciasRespuesta'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/rutas/trayectos/:
+    get:
+      operationId: rutas_trayectos_retrieve
+      summary: Trayectos de varias rutas (máx. 30)
+      parameters:
+      - in: query
+        name: ids
+        schema:
+          type: string
+        description: IDs separados por coma, p. ej. 1,2,3.
+        required: true
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrayectosRespuesta'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/rutas/{id}/:
+    get:
+      operationId: rutas_retrieve
+      summary: Detalle de ruta
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este ruta.
+        required: true
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ruta'
+          description: ''
+    put:
+      operationId: rutas_update
+      summary: Reemplazar ruta (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este ruta.
+        required: true
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RutaRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ruta'
+          description: ''
+    patch:
+      operationId: rutas_partial_update
+      summary: Editar ruta (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este ruta.
+        required: true
+      tags:
+      - red
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRutaRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ruta'
+          description: ''
+    delete:
+      operationId: rutas_destroy
+      summary: Eliminar ruta (administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este ruta.
+        required: true
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/rutas/{id}/trayecto/:
+    get:
+      operationId: rutas_trayecto_retrieve
+      description: GeoJSON LineString. Se consulta a OSRM la primera vez y se cachea;
+        si OSRM falla devuelve una línea recta con aviso (sin cachear).
+      summary: Trayecto por carretera de una ruta
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este ruta.
+        required: true
+      tags:
+      - red
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrayectoRespuesta'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/usuarios/:
+    get:
+      operationId: usuarios_list
+      description: |-
+        Gestión de usuarios. Reglas: nadie se desactiva, elimina ni degrada a sí mismo, y siempre queda al menos un
+        administrador activo. Nunca se devuelve la contraseña ni su hash.
+      summary: Listar usuarios
+      parameters:
+      - in: query
+        name: activo
+        schema:
+          type: boolean
+        description: Filtra por usuarios activos/inactivos.
+      - name: ordering
+        required: false
+        in: query
+        description: Qué campo usar para ordenar los resultados.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      - in: query
+        name: rol
+        schema:
+          type: string
+          enum:
+          - administrador
+          - analista
+      - name: search
+        required: false
+        in: query
+        description: Un término de búsqueda.
+        schema:
+          type: string
+      tags:
+      - usuarios
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsuarioGestionList'
+          description: ''
+    post:
+      operationId: usuarios_create
+      description: |-
+        Gestión de usuarios. Reglas: nadie se desactiva, elimina ni degrada a sí mismo, y siempre queda al menos un
+        administrador activo. Nunca se devuelve la contraseña ni su hash.
+      summary: Crear usuario
+      tags:
+      - usuarios
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioCrearRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioGestion'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/usuarios/{id}/:
+    get:
+      operationId: usuarios_retrieve
+      description: |-
+        Gestión de usuarios. Reglas: nadie se desactiva, elimina ni degrada a sí mismo, y siempre queda al menos un
+        administrador activo. Nunca se devuelve la contraseña ni su hash.
+      summary: Detalle de usuario
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - usuarios
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioGestion'
+          description: ''
+    patch:
+      operationId: usuarios_partial_update
+      description: El username no se edita. Aplica las reglas de protección del propio
+        usuario y del último administrador.
+      summary: Editar usuario (nombre, apellido, email, rol, activo)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - usuarios
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUsuarioActualizarRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioGestion'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+    delete:
+      operationId: usuarios_destroy
+      description: Se rechaza (400) eliminarse a sí mismo o al último administrador
+        activo. Prefiera desactivar.
+      summary: Eliminar usuario
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - usuarios
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/usuarios/{id}/activar/:
+    post:
+      operationId: usuarios_activar_create
+      description: |-
+        Gestión de usuarios. Reglas: nadie se desactiva, elimina ni degrada a sí mismo, y siempre queda al menos un
+        administrador activo. Nunca se devuelve la contraseña ni su hash.
+      summary: Activar usuario
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - usuarios
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioGestion'
+          description: ''
+  /api/v1/usuarios/{id}/desactivar/:
+    post:
+      operationId: usuarios_desactivar_create
+      description: Revoca sus sesiones. Rechaza (400) desactivarse a sí mismo o al
+        último administrador activo.
+      summary: Desactivar usuario
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - usuarios
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsuarioGestion'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/usuarios/{id}/restablecer-contrasena/:
+    post:
+      operationId: usuarios_restablecer_contrasena_create
+      description: Con nueva_contrasena (validada con los validadores de Django) o,
+        si se omite, genera una contraseña temporal que se devuelve UNA sola vez.
+        Revoca las sesiones del usuario.
+      summary: Restablecer la contraseña de un usuario
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este usuario.
+        required: true
+      tags:
+      - usuarios
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestablecerContrasenaRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestablecerContrasenaRespuesta'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/v1/escenarios/:
+    get:
+      operationId: escenarios_list
+      summary: Listar escenarios guardados
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Qué campo usar para ordenar los resultados.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: Un término de búsqueda.
+        schema:
+          type: string
+      tags:
+      - escenarios
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEscenarioList'
+          description: ''
+    post:
+      operationId: escenarios_create
+      description: Toma una instantánea (JSON) de la red activa; solo se envían nombre
+        y descripción.
+      summary: Guardar la red actual como escenario
+      tags:
+      - escenarios
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscenarioRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Escenario'
+          description: ''
+  /api/v1/escenarios/{id}/:
+    get:
+      operationId: escenarios_retrieve
+      summary: Detalle del escenario con sus parámetros
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este escenario.
+        required: true
+      tags:
+      - escenarios
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscenarioDetalle'
+          description: ''
+    delete:
+      operationId: escenarios_destroy
+      summary: Eliminar escenario (propietario o administrador)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este escenario.
+        required: true
+      tags:
+      - escenarios
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/ejecuciones/:
+    get:
+      operationId: ejecuciones_list
+      description: Los administradores ven todas; los analistas solo las propias.
+      summary: Historial de ejecuciones
+      parameters:
+      - in: query
+        name: desde
+        schema:
+          type: string
+        description: Fecha inicial YYYY-MM-DD (inclusive, hora de Bogotá).
+      - in: query
+        name: escenario
+        schema:
+          type: integer
+      - in: query
+        name: estado
+        schema:
+          type: string
+      - in: query
+        name: hasta
+        schema:
+          type: string
+        description: Fecha final YYYY-MM-DD (inclusive, hora de Bogotá).
+      - in: query
+        name: incluye_ficticios
+        schema:
+          type: boolean
+        description: Solo ejecuciones con (true) o sin (false) datos ficticios.
+      - in: query
+        name: metodo
+        schema:
+          type: string
+          enum:
+          - escalabilidad
+          - exacto
+          - genetico
+          - reporte
+          - sensibilidad
+      - name: ordering
+        required: false
+        in: query
+        description: Qué campo usar para ordenar los resultados.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: Un número de página dentro del conjunto de resultados paginado.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Número de resultados a devolver por página.
+        schema:
+          type: integer
+      - in: query
+        name: usuario
+        schema:
+          type: string
+        description: Username (solo administradores).
+      tags:
+      - ejecuciones
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEjecucionListaList'
+          description: ''
+  /api/v1/ejecuciones/{id}/:
+    get:
+      operationId: ejecuciones_retrieve
+      summary: Detalle de una ejecución con su resultado completo
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este ejecución.
+        required: true
+      tags:
+      - ejecuciones
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EjecucionDetalle'
+          description: ''
+components:
+  schemas:
+    AnalisisPlanta:
+      type: object
+      properties:
+        planta:
+          type: string
+        nombre:
+          type: string
+        tipo_demanda:
+          type: string
+        capacidad:
+          type: number
+          format: double
+        flujo:
+          type: number
+          format: double
+        utilizacion_pct:
+          type: number
+          format: double
+          nullable: true
+        precio_sombra:
+          type: number
+          format: double
+          nullable: true
+        cuello_de_botella:
+          type: boolean
+      required:
+      - capacidad
+      - cuello_de_botella
+      - flujo
+      - nombre
+      - planta
+      - precio_sombra
+      - tipo_demanda
+      - utilizacion_pct
+    Asignacion:
+      type: object
+      properties:
+        empresa_id:
+          type: string
+        planta_id:
+          type: string
+        cantidad:
+          type: number
+          format: double
+        costo_unitario:
+          type: number
+          format: double
+          description: Costo efectivo COP/t = transporte + operación + precio.
+        costo_transporte:
+          type: number
+          format: double
+          description: distancia x tarifa, o costo unitario directo.
+        costo_operacion:
+          type: number
+          format: double
+          description: costo_operacion_ton de la planta.
+        precio_tonelada:
+          type: number
+          format: double
+          description: precio_tonelada de la empresa.
+      required:
+      - cantidad
+      - costo_unitario
+      - empresa_id
+      - planta_id
+    BaseSensibilidad:
+      type: object
+      properties:
+        exacto:
+          $ref: '#/components/schemas/ResumenSolucion'
+        genetico:
+          allOf:
+          - $ref: '#/components/schemas/ResumenSolucion'
+          nullable: true
+        gap_pct:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - exacto
+      - gap_pct
+      - genetico
+    CambiarContrasenaRequest:
+      type: object
+      properties:
+        contrasena_actual:
+          type: string
+          writeOnly: true
+          minLength: 1
+        contrasena_nueva:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - contrasena_actual
+      - contrasena_nueva
+    CambiarContrasenaRespuesta:
+      type: object
+      properties:
+        detail:
+          type: string
+        access:
+          type: string
+        refresh:
+          type: string
+      required:
+      - access
+      - detail
+      - refresh
+    CambioAsignacion:
+      type: object
+      properties:
+        empresa:
+          type: string
+        planta:
+          type: string
+        base:
+          type: number
+          format: double
+          description: Toneladas en el caso base (exacto).
+        escenario:
+          type: number
+          format: double
+          description: Toneladas en el escenario (exacto).
+        delta:
+          type: number
+          format: double
+      required:
+      - base
+      - delta
+      - empresa
+      - escenario
+      - planta
+    CeldaMatrizLectura:
+      type: object
+      properties:
+        empresa:
+          type: string
+        planta:
+          type: string
+        costo_unitario:
+          type: number
+          format: double
+          nullable: true
+        distancia_km:
+          type: number
+          format: double
+          nullable: true
+        tarifa_km_ton:
+          type: number
+          format: double
+          nullable: true
+        limite:
+          type: number
+          format: double
+          nullable: true
+        activa:
+          type: boolean
+      required:
+      - activa
+      - costo_unitario
+      - distancia_km
+      - empresa
+      - limite
+      - planta
+      - tarifa_km_ton
+    CeldaMatrizRequest:
+      type: object
+      properties:
+        empresa:
+          type: string
+          minLength: 1
+          description: Código de la empresa.
+        planta:
+          type: string
+          minLength: 1
+          description: Código de la planta.
+        costo_unitario:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        distancia_km:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        tarifa_km_ton:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        limite:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        activa:
+          type: boolean
+      required:
+      - empresa
+      - planta
+    Comparacion:
+      type: object
+      properties:
+        diferencia_costo:
+          type: number
+          format: double
+          nullable: true
+        gap_pct:
+          type: number
+          format: double
+          nullable: true
+          description: (AG - exacto) / exacto x 100.
+        ratio_tiempo:
+          type: number
+          format: double
+          nullable: true
+          description: tiempo AG / tiempo exacto.
+        ag_alcanza_optimo:
+          type: boolean
+      required:
+      - ag_alcanza_optimo
+      - diferencia_costo
+      - gap_pct
+      - ratio_tiempo
+    ConfigAG:
+      type: object
+      properties:
+        poblacion:
+          type: integer
+          maximum: 300
+          minimum: 2
+          default: 60
+        generaciones:
+          type: integer
+          maximum: 1000
+          minimum: 1
+          default: 150
+        cruce:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          default: 0.8
+          description: Probabilidad de cruce por pareja.
+        mutacion:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          default: 0.12
+          description: Probabilidad de mutación por gen.
+        semilla:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          default: 42
+        elitismo:
+          type: integer
+          minimum: 0
+          default: 2
+          description: Individuos que pasan intactos; < población.
+        seleccion:
+          allOf:
+          - $ref: '#/components/schemas/SeleccionEnum'
+          default: torneo
+          description: |-
+            torneo: gana el mejor de tamano_torneo individuos; ruleta: proporcional a la aptitud (con escalamiento).
+
+            * `torneo` - torneo
+            * `ruleta` - ruleta
+        tipo_cruce:
+          allOf:
+          - $ref: '#/components/schemas/TipoCruceEnum'
+          default: un_punto
+          description: |-
+            Cruce de uno o de dos puntos.
+
+            * `un_punto` - un_punto
+            * `dos_puntos` - dos_puntos
+        tamano_torneo:
+          type: integer
+          minimum: 2
+          default: 3
+          description: Solo con seleccion=torneo; <= población.
+        inicializacion:
+          allOf:
+          - $ref: '#/components/schemas/InicializacionEnum'
+          default: aleatoria
+          description: |-
+            aleatoria (línea base) o heuristica (parte de la población sesgada hacia rutas baratas).
+
+            * `aleatoria` - aleatoria
+            * `heuristica` - heuristica
+    ConfigAGRequest:
+      type: object
+      properties:
+        poblacion:
+          type: integer
+          maximum: 300
+          minimum: 2
+          default: 60
+        generaciones:
+          type: integer
+          maximum: 1000
+          minimum: 1
+          default: 150
+        cruce:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          default: 0.8
+          description: Probabilidad de cruce por pareja.
+        mutacion:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          default: 0.12
+          description: Probabilidad de mutación por gen.
+        semilla:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          default: 42
+        elitismo:
+          type: integer
+          minimum: 0
+          default: 2
+          description: Individuos que pasan intactos; < población.
+        seleccion:
+          allOf:
+          - $ref: '#/components/schemas/SeleccionEnum'
+          default: torneo
+          description: |-
+            torneo: gana el mejor de tamano_torneo individuos; ruleta: proporcional a la aptitud (con escalamiento).
+
+            * `torneo` - torneo
+            * `ruleta` - ruleta
+        tipo_cruce:
+          allOf:
+          - $ref: '#/components/schemas/TipoCruceEnum'
+          default: un_punto
+          description: |-
+            Cruce de uno o de dos puntos.
+
+            * `un_punto` - un_punto
+            * `dos_puntos` - dos_puntos
+        tamano_torneo:
+          type: integer
+          minimum: 2
+          default: 3
+          description: Solo con seleccion=torneo; <= población.
+        inicializacion:
+          allOf:
+          - $ref: '#/components/schemas/InicializacionEnum'
+          default: aleatoria
+          description: |-
+            aleatoria (línea base) o heuristica (parte de la población sesgada hacia rutas baratas).
+
+            * `aleatoria` - aleatoria
+            * `heuristica` - heuristica
+    DemoCarga:
+      type: object
+      properties:
+        cargado:
+          type: boolean
+          description: Existen empresas o plantas FICTICIAS de demostración.
+        empresas:
+          type: integer
+        plantas:
+          type: integer
+        rutas:
+          type: integer
+        ficticio:
+          type: boolean
+        detail:
+          type: string
+      required:
+      - cargado
+      - detail
+      - empresas
+      - ficticio
+      - plantas
+      - rutas
+    DemoEstado:
+      type: object
+      properties:
+        cargado:
+          type: boolean
+          description: Existen empresas o plantas FICTICIAS de demostración.
+      required:
+      - cargado
+    DistanciaFuenteEnum:
+      enum:
+      - carretera
+      - estimada
+      - manual
+      type: string
+      description: |-
+        * `carretera` - Por carretera (OSRM/OpenStreetMap)
+        * `estimada` - Estimada (línea recta x 1,3)
+        * `manual` - Ingresada manualmente
+    EjecucionDetalle:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        metodo:
+          allOf:
+          - $ref: '#/components/schemas/MetodoEnum'
+          readOnly: true
+        estado:
+          type: string
+          readOnly: true
+          description: OPTIMAL, FEASIBLE, INFEASIBLE, COMPLETADA, ...
+        objetivo:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+          description: Costo total (COP/semana), si aplica.
+        duracion_ms:
+          type: number
+          format: double
+          readOnly: true
+        usuario:
+          type: string
+          readOnly: true
+        escenario:
+          type: integer
+          readOnly: true
+          nullable: true
+        configuracion:
+          readOnly: true
+        incluye_ficticios:
+          type: boolean
+          readOnly: true
+          description: La red usada incluía empresas o plantas marcadas como FICTICIAS
+            (datos de demostración).
+        creada_en:
+          type: string
+          format: date-time
+          readOnly: true
+        parametros:
+          readOnly: true
+        resultado:
+          readOnly: true
+      required:
+      - configuracion
+      - creada_en
+      - duracion_ms
+      - escenario
+      - estado
+      - id
+      - incluye_ficticios
+      - metodo
+      - objetivo
+      - parametros
+      - resultado
+      - usuario
+    EjecucionEscalabilidad:
+      type: object
+      properties:
+        ejecucion_id:
+          type: integer
+          nullable: true
+        resultado:
+          $ref: '#/components/schemas/EscalabilidadResultado'
+      required:
+      - ejecucion_id
+      - resultado
+    EjecucionLista:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        metodo:
+          allOf:
+          - $ref: '#/components/schemas/MetodoEnum'
+          readOnly: true
+        estado:
+          type: string
+          readOnly: true
+          description: OPTIMAL, FEASIBLE, INFEASIBLE, COMPLETADA, ...
+        objetivo:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+          description: Costo total (COP/semana), si aplica.
+        duracion_ms:
+          type: number
+          format: double
+          readOnly: true
+        usuario:
+          type: string
+          readOnly: true
+        escenario:
+          type: integer
+          readOnly: true
+          nullable: true
+        configuracion:
+          readOnly: true
+        incluye_ficticios:
+          type: boolean
+          readOnly: true
+          description: La red usada incluía empresas o plantas marcadas como FICTICIAS
+            (datos de demostración).
+        creada_en:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - configuracion
+      - creada_en
+      - duracion_ms
+      - escenario
+      - estado
+      - id
+      - incluye_ficticios
+      - metodo
+      - objetivo
+      - usuario
+    EjecucionReporte:
+      type: object
+      properties:
+        ejecucion_id:
+          type: integer
+          nullable: true
+        resultado:
+          $ref: '#/components/schemas/ReporteResultado'
+      required:
+      - ejecucion_id
+      - resultado
+    EjecucionResultado:
+      type: object
+      properties:
+        ejecucion_id:
+          type: integer
+          nullable: true
+          description: null si guardar=false.
+        resultado:
+          $ref: '#/components/schemas/ResultadoOptimizacion'
+      required:
+      - ejecucion_id
+      - resultado
+    EjecucionSensibilidad:
+      type: object
+      properties:
+        ejecucion_id:
+          type: integer
+          nullable: true
+        resultado:
+          $ref: '#/components/schemas/SensibilidadResultado'
+      required:
+      - ejecucion_id
+      - resultado
+    EjecutarExactoRequest:
+      type: object
+      properties:
+        escenario_id:
+          type: integer
+          description: Usa la instantánea de un escenario guardado en vez de la red
+            actual.
+        guardar:
+          type: boolean
+          default: true
+          description: Registrar la ejecución en el historial.
+        modo_oferta:
+          allOf:
+          - $ref: '#/components/schemas/ModoOfertaEnum'
+          default: exact
+          description: |-
+            exact: toda la oferta se retira (=); maximum: (<=).
+
+            * `exact` - exact
+            * `maximum` - maximum
+    EjecutarGeneticoRequest:
+      type: object
+      properties:
+        escenario_id:
+          type: integer
+          description: Usa la instantánea de un escenario guardado en vez de la red
+            actual.
+        guardar:
+          type: boolean
+          default: true
+          description: Registrar la ejecución en el historial.
+        poblacion:
+          type: integer
+          maximum: 300
+          minimum: 2
+          default: 60
+        generaciones:
+          type: integer
+          maximum: 1000
+          minimum: 1
+          default: 150
+        cruce:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          default: 0.8
+          description: Probabilidad de cruce por pareja.
+        mutacion:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          default: 0.12
+          description: Probabilidad de mutación por gen.
+        semilla:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          default: 42
+        elitismo:
+          type: integer
+          minimum: 0
+          default: 2
+          description: Individuos que pasan intactos; < población.
+        seleccion:
+          allOf:
+          - $ref: '#/components/schemas/SeleccionEnum'
+          default: torneo
+          description: |-
+            torneo: gana el mejor de tamano_torneo individuos; ruleta: proporcional a la aptitud (con escalamiento).
+
+            * `torneo` - torneo
+            * `ruleta` - ruleta
+        tipo_cruce:
+          allOf:
+          - $ref: '#/components/schemas/TipoCruceEnum'
+          default: un_punto
+          description: |-
+            Cruce de uno o de dos puntos.
+
+            * `un_punto` - un_punto
+            * `dos_puntos` - dos_puntos
+        tamano_torneo:
+          type: integer
+          minimum: 2
+          default: 3
+          description: Solo con seleccion=torneo; <= población.
+        inicializacion:
+          allOf:
+          - $ref: '#/components/schemas/InicializacionEnum'
+          default: aleatoria
+          description: |-
+            aleatoria (línea base) o heuristica (parte de la población sesgada hacia rutas baratas).
+
+            * `aleatoria` - aleatoria
+            * `heuristica` - heuristica
+    Empresa:
+      type: object
+      description: El ``codigo`` (identificador del modelo de optimización) no se
+        edita tras crearlo.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        codigo:
+          type: string
+          pattern: ^[A-Za-z0-9_]+$
+          maxLength: 20
+        nombre:
+          type: string
+          maxLength: 120
+        municipio:
+          type: string
+          maxLength: 80
+        oferta:
+          type: number
+          format: double
+          minimum: 0
+          title: Oferta (t/semana)
+        precio_tonelada:
+          type: number
+          format: double
+          minimum: 0
+          title: Precio de la tonelada (COP/t)
+          description: Se suma al costo efectivo de toda ruta que sale de esta empresa
+            (0 = se retira sin costo).
+        latitud:
+          type: number
+          format: double
+          maximum: 90
+          minimum: -90
+          nullable: true
+        longitud:
+          type: number
+          format: double
+          maximum: 180
+          minimum: -180
+          nullable: true
+        activa:
+          type: boolean
+        ficticio:
+          type: boolean
+          description: Dato de demostración FICTICIO (no corresponde a una empresa
+            real).
+        creado_en:
+          type: string
+          format: date-time
+          readOnly: true
+        actualizado_en:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - actualizado_en
+      - codigo
+      - creado_en
+      - id
+      - nombre
+      - oferta
+    EmpresaRequest:
+      type: object
+      description: El ``codigo`` (identificador del modelo de optimización) no se
+        edita tras crearlo.
+      properties:
+        codigo:
+          type: string
+          minLength: 1
+          pattern: ^[A-Za-z0-9_]+$
+          maxLength: 20
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        municipio:
+          type: string
+          maxLength: 80
+        oferta:
+          type: number
+          format: double
+          minimum: 0
+          title: Oferta (t/semana)
+        precio_tonelada:
+          type: number
+          format: double
+          minimum: 0
+          title: Precio de la tonelada (COP/t)
+          description: Se suma al costo efectivo de toda ruta que sale de esta empresa
+            (0 = se retira sin costo).
+        latitud:
+          type: number
+          format: double
+          maximum: 90
+          minimum: -90
+          nullable: true
+        longitud:
+          type: number
+          format: double
+          maximum: 180
+          minimum: -180
+          nullable: true
+        activa:
+          type: boolean
+        ficticio:
+          type: boolean
+          description: Dato de demostración FICTICIO (no corresponde a una empresa
+            real).
+      required:
+      - codigo
+      - nombre
+      - oferta
+    Error:
+      type: object
+      description: 'Respuesta 400: ``errores`` es una lista de mensajes o un dict
+        campo -> mensajes.'
+      properties:
+        detail:
+          type: string
+        errores: {}
+      required:
+      - detail
+      - errores
+    EscalabilidadResultado:
+      type: object
+      properties:
+        ficticio:
+          type: boolean
+          description: 'Siempre true: las redes son sintéticas.'
+        semilla_red:
+          type: integer
+        configuracion_ag:
+          $ref: '#/components/schemas/ConfigAG'
+        tamanos:
+          type: array
+          items:
+            $ref: '#/components/schemas/FilaEscalabilidad'
+        duracion_total_ms:
+          type: number
+          format: double
+        nota:
+          type: string
+      required:
+      - configuracion_ag
+      - duracion_total_ms
+      - ficticio
+      - nota
+      - semilla_red
+      - tamanos
+    EscalabilidadSolicitudRequest:
+      type: object
+      properties:
+        escenario_id:
+          type: integer
+          description: Usa la instantánea de un escenario guardado en vez de la red
+            actual.
+        guardar:
+          type: boolean
+          default: true
+          description: Registrar la ejecución en el historial.
+        tamanos:
+          type: array
+          items:
+            $ref: '#/components/schemas/TamanoRedRequest'
+          description: Por defecto 10x4, 20x6, 40x10 y 80x16 (empresas x plantas).
+            Redes sintéticas FICTICIAS.
+        config_ag:
+          allOf:
+          - $ref: '#/components/schemas/ConfigAGRequest'
+          description: Por defecto poblacion=40, generaciones=80, inicializacion=heuristica.
+        semilla_red:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          default: 2026
+          description: Semilla del generador de redes.
+    Escenario:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 120
+        descripcion:
+          type: string
+        creado_por:
+          type: string
+          readOnly: true
+        creado_en:
+          type: string
+          format: date-time
+          readOnly: true
+        resumen:
+          allOf:
+          - $ref: '#/components/schemas/ResumenModelo'
+          readOnly: true
+      required:
+      - creado_en
+      - creado_por
+      - id
+      - nombre
+      - resumen
+    EscenarioDetalle:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 120
+        descripcion:
+          type: string
+        creado_por:
+          type: string
+          readOnly: true
+        creado_en:
+          type: string
+          format: date-time
+          readOnly: true
+        resumen:
+          allOf:
+          - $ref: '#/components/schemas/ResumenModelo'
+          readOnly: true
+        parametros:
+          readOnly: true
+      required:
+      - creado_en
+      - creado_por
+      - id
+      - nombre
+      - parametros
+      - resumen
+    EscenarioRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        descripcion:
+          type: string
+      required:
+      - nombre
+    EscenarioSensibilidad:
+      type: object
+      properties:
+        nombre:
+          type: string
+        tipo:
+          type: string
+        ids:
+          type: array
+          items:
+            type: string
+        porcentaje:
+          type: number
+          format: double
+        exacto:
+          $ref: '#/components/schemas/ResumenSolucion'
+        variacion_objetivo:
+          type: number
+          format: double
+          nullable: true
+          description: Costo escenario - costo base (COP).
+        variacion_objetivo_pct:
+          type: number
+          format: double
+          nullable: true
+        genetico:
+          allOf:
+          - $ref: '#/components/schemas/ResumenSolucion'
+          nullable: true
+        gap_pct:
+          type: number
+          format: double
+          nullable: true
+          description: (AG - exacto) / exacto x 100 en este escenario.
+        base_cambio:
+          type: boolean
+          nullable: true
+          description: La base óptima del LP cambió frente al caso base. null si el
+            escenario es inviable.
+        dentro_de_rango:
+          type: boolean
+          nullable: true
+          description: 'Solo con un único id: el nuevo valor cae dentro del rango
+            (ranging) que conserva la base óptima.'
+        asignaciones_cambiadas:
+          type: integer
+          description: Rutas cuyo flujo exacto cambia frente al caso base.
+        cambios_asignacion:
+          type: array
+          items:
+            $ref: '#/components/schemas/CambioAsignacion'
+        costo_exacto:
+          type: number
+          format: double
+          nullable: true
+        costo_ag:
+          type: number
+          format: double
+          nullable: true
+        tiempo_exacto_ms:
+          type: number
+          format: double
+        tiempo_ag_ms:
+          type: number
+          format: double
+          nullable: true
+        estado_exacto:
+          type: string
+        estado_ag:
+          type: string
+          nullable: true
+      required:
+      - asignaciones_cambiadas
+      - base_cambio
+      - cambios_asignacion
+      - costo_ag
+      - costo_exacto
+      - dentro_de_rango
+      - estado_ag
+      - estado_exacto
+      - exacto
+      - gap_pct
+      - genetico
+      - ids
+      - nombre
+      - porcentaje
+      - tiempo_ag_ms
+      - tiempo_exacto_ms
+      - tipo
+      - variacion_objetivo
+      - variacion_objetivo_pct
+    FilaEscalabilidad:
+      type: object
+      properties:
+        empresas:
+          type: integer
+        plantas:
+          type: integer
+        rutas:
+          type: integer
+        oferta_total:
+          type: number
+          format: double
+        capacidad_total:
+          type: number
+          format: double
+        exacto:
+          $ref: '#/components/schemas/ResumenSolucion'
+        genetico:
+          $ref: '#/components/schemas/ResumenSolucion'
+        gap_pct:
+          type: number
+          format: double
+          nullable: true
+        ratio_tiempo:
+          type: number
+          format: double
+          nullable: true
+          description: tiempo AG / tiempo exacto.
+      required:
+      - capacidad_total
+      - empresas
+      - exacto
+      - gap_pct
+      - genetico
+      - oferta_total
+      - plantas
+      - ratio_tiempo
+      - rutas
+    InicializacionEnum:
+      enum:
+      - aleatoria
+      - heuristica
+      type: string
+      description: |-
+        * `aleatoria` - aleatoria
+        * `heuristica` - heuristica
+    LoginRequest:
+      type: object
+      description: Devuelve access, refresh y los datos del usuario (incluido el rol).
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    LoginRespuesta:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+      required:
+      - access
+      - refresh
+      - usuario
+    LogoutRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    MatrizCostos:
+      type: object
+      properties:
+        empresas:
+          type: array
+          items:
+            $ref: '#/components/schemas/NodoMatriz'
+        plantas:
+          type: array
+          items:
+            $ref: '#/components/schemas/NodoMatriz'
+        costos:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+              nullable: true
+          description: costos[i][j] = costo de TRANSPORTE de empresas[i] a plantas[j]
+            (COP/t); null si no hay ruta.
+        costos_totales:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: double
+              nullable: true
+          description: 'costos_totales[i][j] = costo efectivo que minimiza el optimizador:
+            transporte + costo_operacion_ton de la planta j + precio_tonelada de la
+            empresa i; null si no hay ruta.'
+        rutas:
+          type: array
+          items:
+            $ref: '#/components/schemas/CeldaMatrizLectura'
+      required:
+      - costos
+      - costos_totales
+      - empresas
+      - plantas
+      - rutas
+    MatrizCostosEscrituraRequest:
+      type: object
+      properties:
+        rutas:
+          type: array
+          items:
+            $ref: '#/components/schemas/CeldaMatrizRequest'
+      required:
+      - rutas
+    MetodoEnum:
+      enum:
+      - exacto
+      - genetico
+      - sensibilidad
+      - reporte
+      - escalabilidad
+      type: string
+      description: |-
+        * `exacto` - Método exacto (HiGHS)
+        * `genetico` - Algoritmo genético
+        * `sensibilidad` - Análisis de sensibilidad
+        * `reporte` - Reporte comparativo
+        * `escalabilidad` - Prueba de escalabilidad
+    ModoOfertaEnum:
+      enum:
+      - exact
+      - maximum
+      type: string
+      description: |-
+        * `exact` - exact
+        * `maximum` - maximum
+    NodoMatriz:
+      type: object
+      properties:
+        codigo:
+          type: string
+        nombre:
+          type: string
+        activa:
+          type: boolean
+        precio_tonelada:
+          type: number
+          format: double
+          description: Solo empresas (COP/t).
+        costo_operacion_ton:
+          type: number
+          format: double
+          description: Solo plantas (COP/t).
+      required:
+      - activa
+      - codigo
+      - nombre
+    PaginatedEjecucionListaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EjecucionLista'
+    PaginatedEmpresaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Empresa'
+    PaginatedEscenarioList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Escenario'
+    PaginatedPlantaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Planta'
+    PaginatedRutaList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ruta'
+    PaginatedUsuarioGestionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsuarioGestion'
+    PatchedEmpresaRequest:
+      type: object
+      description: El ``codigo`` (identificador del modelo de optimización) no se
+        edita tras crearlo.
+      properties:
+        codigo:
+          type: string
+          minLength: 1
+          pattern: ^[A-Za-z0-9_]+$
+          maxLength: 20
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        municipio:
+          type: string
+          maxLength: 80
+        oferta:
+          type: number
+          format: double
+          minimum: 0
+          title: Oferta (t/semana)
+        precio_tonelada:
+          type: number
+          format: double
+          minimum: 0
+          title: Precio de la tonelada (COP/t)
+          description: Se suma al costo efectivo de toda ruta que sale de esta empresa
+            (0 = se retira sin costo).
+        latitud:
+          type: number
+          format: double
+          maximum: 90
+          minimum: -90
+          nullable: true
+        longitud:
+          type: number
+          format: double
+          maximum: 180
+          minimum: -180
+          nullable: true
+        activa:
+          type: boolean
+        ficticio:
+          type: boolean
+          description: Dato de demostración FICTICIO (no corresponde a una empresa
+            real).
+    PatchedPerfilActualizarRequest:
+      type: object
+      description: 'PATCH /auth/me/: el usuario edita sus propios datos (no el rol).'
+      properties:
+        first_name:
+          type: string
+          title: Nombre
+          maxLength: 150
+        last_name:
+          type: string
+          title: Apellidos
+          maxLength: 150
+        email:
+          type: string
+          format: email
+    PatchedPlantaRequest:
+      type: object
+      description: El ``codigo`` (identificador del modelo de optimización) no se
+        edita tras crearlo.
+      properties:
+        codigo:
+          type: string
+          minLength: 1
+          pattern: ^[A-Za-z0-9_]+$
+          maxLength: 20
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        municipio:
+          type: string
+          maxLength: 80
+        capacidad:
+          type: number
+          format: double
+          minimum: 0
+          title: Capacidad / demanda (t/semana)
+        tipo_demanda:
+          $ref: '#/components/schemas/TipoDemandaEnum'
+        costo_operacion_ton:
+          type: number
+          format: double
+          minimum: 0
+          title: Costo de operación (COP/t)
+          description: Se suma al costo efectivo de toda ruta que llega a esta planta
+            (procesamiento/operación).
+        latitud:
+          type: number
+          format: double
+          maximum: 90
+          minimum: -90
+          nullable: true
+        longitud:
+          type: number
+          format: double
+          maximum: 180
+          minimum: -180
+          nullable: true
+        activa:
+          type: boolean
+        ficticio:
+          type: boolean
+          description: Dato de demostración FICTICIO (no corresponde a una planta
+            real).
+    PatchedRutaRequest:
+      type: object
+      description: |-
+        ``empresa`` y ``planta`` se expresan con su ``codigo``.
+
+        Si se indican ``distancia_km`` y ``tarifa_km_ton``, ``costo_unitario`` = distancia x tarifa
+        (el valor enviado se ignora). Un ``costo_unitario`` solo, anula distancia y tarifa.
+      properties:
+        empresa:
+          type: string
+          minLength: 1
+        planta:
+          type: string
+          minLength: 1
+        distancia_km:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        tarifa_km_ton:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          title: Tarifa (COP por t·km)
+        costo_unitario:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        limite:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          title: Límite de flujo (t/semana)
+        activa:
+          type: boolean
+        ficticio:
+          type: boolean
+          description: Dato de demostración FICTICIO.
+    PatchedUsuarioActualizarRequest:
+      type: object
+      description: 'PATCH: nombre, apellido, email, rol y activo. El username no se
+        edita.'
+      properties:
+        first_name:
+          type: string
+          title: Nombre
+          maxLength: 150
+        last_name:
+          type: string
+          title: Apellidos
+          maxLength: 150
+        email:
+          type: string
+          format: email
+        rol:
+          $ref: '#/components/schemas/RolEnum'
+        activo:
+          type: boolean
+    Planta:
+      type: object
+      description: El ``codigo`` (identificador del modelo de optimización) no se
+        edita tras crearlo.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        codigo:
+          type: string
+          pattern: ^[A-Za-z0-9_]+$
+          maxLength: 20
+        nombre:
+          type: string
+          maxLength: 120
+        municipio:
+          type: string
+          maxLength: 80
+        capacidad:
+          type: number
+          format: double
+          minimum: 0
+          title: Capacidad / demanda (t/semana)
+        tipo_demanda:
+          $ref: '#/components/schemas/TipoDemandaEnum'
+        costo_operacion_ton:
+          type: number
+          format: double
+          minimum: 0
+          title: Costo de operación (COP/t)
+          description: Se suma al costo efectivo de toda ruta que llega a esta planta
+            (procesamiento/operación).
+        latitud:
+          type: number
+          format: double
+          maximum: 90
+          minimum: -90
+          nullable: true
+        longitud:
+          type: number
+          format: double
+          maximum: 180
+          minimum: -180
+          nullable: true
+        activa:
+          type: boolean
+        ficticio:
+          type: boolean
+          description: Dato de demostración FICTICIO (no corresponde a una planta
+            real).
+        creado_en:
+          type: string
+          format: date-time
+          readOnly: true
+        actualizado_en:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - actualizado_en
+      - capacidad
+      - codigo
+      - creado_en
+      - id
+      - nombre
+    PlantaRequest:
+      type: object
+      description: El ``codigo`` (identificador del modelo de optimización) no se
+        edita tras crearlo.
+      properties:
+        codigo:
+          type: string
+          minLength: 1
+          pattern: ^[A-Za-z0-9_]+$
+          maxLength: 20
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        municipio:
+          type: string
+          maxLength: 80
+        capacidad:
+          type: number
+          format: double
+          minimum: 0
+          title: Capacidad / demanda (t/semana)
+        tipo_demanda:
+          $ref: '#/components/schemas/TipoDemandaEnum'
+        costo_operacion_ton:
+          type: number
+          format: double
+          minimum: 0
+          title: Costo de operación (COP/t)
+          description: Se suma al costo efectivo de toda ruta que llega a esta planta
+            (procesamiento/operación).
+        latitud:
+          type: number
+          format: double
+          maximum: 90
+          minimum: -90
+          nullable: true
+        longitud:
+          type: number
+          format: double
+          maximum: 180
+          minimum: -180
+          nullable: true
+        activa:
+          type: boolean
+        ficticio:
+          type: boolean
+          description: Dato de demostración FICTICIO (no corresponde a una planta
+            real).
+      required:
+      - capacidad
+      - codigo
+      - nombre
+    PreciosSombra:
+      type: object
+      properties:
+        empresas:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+        plantas:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+      required:
+      - empresas
+      - plantas
+    RangoCosto:
+      type: object
+      properties:
+        ruta:
+          type: string
+          description: '''E1->P2''.'
+        costo_actual:
+          type: number
+          format: double
+          description: Costo efectivo COP/t (transporte + operación + precio).
+        flujo:
+          type: number
+          format: double
+        en_base:
+          type: boolean
+          description: La variable de la ruta es básica en el óptimo.
+        costo_reducido:
+          type: number
+          format: double
+        minimo:
+          type: number
+          format: double
+          nullable: true
+          description: Costo mínimo que conserva la base óptima; null = sin límite.
+        maximo:
+          type: number
+          format: double
+          nullable: true
+          description: Costo máximo que conserva la base óptima; null = sin límite.
+        objetivo_en_minimo:
+          type: number
+          format: double
+          nullable: true
+        objetivo_en_maximo:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - costo_actual
+      - costo_reducido
+      - en_base
+      - flujo
+      - maximo
+      - minimo
+      - objetivo_en_maximo
+      - objetivo_en_minimo
+      - ruta
+    RangoRhs:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Código de la empresa (oferta) o de la planta (capacidad).
+        valor_actual:
+          type: number
+          format: double
+        precio_sombra:
+          type: number
+          format: double
+        activa:
+          type: boolean
+          description: La restricción está activa (saturada) en el óptimo.
+        minimo:
+          type: number
+          format: double
+          nullable: true
+          description: Límite inferior que conserva la base óptima; null = sin límite.
+        maximo:
+          type: number
+          format: double
+          nullable: true
+          description: Límite superior que conserva la base óptima; null = sin límite.
+        objetivo_en_minimo:
+          type: number
+          format: double
+          nullable: true
+        objetivo_en_maximo:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - activa
+      - id
+      - maximo
+      - minimo
+      - objetivo_en_maximo
+      - objetivo_en_minimo
+      - precio_sombra
+      - valor_actual
+    Rangos:
+      type: object
+      properties:
+        disponible:
+          type: boolean
+        metodo:
+          type: string
+          nullable: true
+          description: highs_ranging
+        oferta:
+          type: array
+          items:
+            $ref: '#/components/schemas/RangoRhs'
+        capacidad:
+          type: array
+          items:
+            $ref: '#/components/schemas/RangoRhs'
+        costos:
+          type: array
+          items:
+            $ref: '#/components/schemas/RangoCosto'
+      required:
+      - capacidad
+      - costos
+      - disponible
+      - metodo
+      - oferta
+    RecalcularDistanciasRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+          description: IDs de rutas a recalcular. Si se omite, todas las rutas con
+            fuente carretera/estimada.
+          maxItems: 2000
+        solo_estimadas:
+          type: boolean
+          default: false
+          description: Solo rutas con distancia_fuente=estimada (reintento tras un
+            fallo de OSRM).
+        incluir_manuales:
+          type: boolean
+          default: false
+          description: Si es true, también sobrescribe rutas con distancia manual
+            (use con cuidado; requiere ids o aplica a todas).
+    RecalcularDistanciasRespuesta:
+      type: object
+      properties:
+        actualizadas:
+          type: integer
+        estimadas:
+          type: integer
+          description: De las actualizadas, cuántas quedaron como estimada (sin OSRM).
+        errores:
+          type: integer
+          description: Rutas omitidas (p. ej. sin coordenadas).
+        detalle_errores:
+          type: array
+          items:
+            type: string
+        aviso:
+          type: string
+          nullable: true
+      required:
+      - actualizadas
+      - aviso
+      - detalle_errores
+      - errores
+      - estimadas
+    RefreshRespuesta:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+          description: 'El refresh rota en cada renovación: guarde el nuevo y descarte
+            el anterior.'
+      required:
+      - access
+      - refresh
+    ReporteResultado:
+      type: object
+      properties:
+        modelo:
+          $ref: '#/components/schemas/ResumenModelo'
+        exacto:
+          $ref: '#/components/schemas/SolucionReporte'
+        genetico:
+          $ref: '#/components/schemas/SolucionReporte'
+        configuracion_ag:
+          $ref: '#/components/schemas/ConfigAG'
+        comparacion:
+          $ref: '#/components/schemas/Comparacion'
+        plantas:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalisisPlanta'
+        sensibilidad:
+          allOf:
+          - $ref: '#/components/schemas/SensibilidadResultado'
+          nullable: true
+      required:
+      - comparacion
+      - configuracion_ag
+      - exacto
+      - genetico
+      - modelo
+      - plantas
+      - sensibilidad
+    ReporteSolicitudRequest:
+      type: object
+      properties:
+        escenario_id:
+          type: integer
+          description: Usa la instantánea de un escenario guardado en vez de la red
+            actual.
+        guardar:
+          type: boolean
+          default: true
+          description: Registrar la ejecución en el historial.
+        config_ag:
+          $ref: '#/components/schemas/ConfigAGRequest'
+        variaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/VariacionRequest'
+          description: Si se indica, añade la sección de sensibilidad.
+    RestablecerContrasenaRequest:
+      type: object
+      properties:
+        nueva_contrasena:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: Si se omite, el servidor genera una contraseña temporal y la
+            devuelve UNA sola vez.
+    RestablecerContrasenaRespuesta:
+      type: object
+      properties:
+        detail:
+          type: string
+        contrasena_temporal:
+          type: string
+          nullable: true
+          description: Solo si el servidor la generó.
+      required:
+      - contrasena_temporal
+      - detail
+    ResultadoOptimizacion:
+      type: object
+      properties:
+        metodo:
+          type: string
+        estado:
+          type: string
+          description: OPTIMAL | FEASIBLE | INFEASIBLE | UNBOUNDED | ...
+        factible:
+          type: boolean
+        objetivo:
+          type: number
+          format: double
+          nullable: true
+          description: Costo total COP/semana.
+        asignaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asignacion'
+        duracion_ms:
+          type: number
+          format: double
+        mensajes:
+          type: array
+          items:
+            type: string
+        duales:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          description: 'Precios sombra del LP: ''oferta:E1'', ''planta:P1'' (solo
+            método exacto).'
+        verificacion:
+          type: object
+          additionalProperties: {}
+          description: valida, errores[], violacion_maxima.
+        metricas:
+          type: object
+          additionalProperties: {}
+          description: 'Exacto: solver, desglose_costos{transporte, operacion, precio,
+            total}. AG: parámetros usados, convergencia[] (mejor costo penalizado
+            por generación), convergencia_promedio[], aptitud_mejor[], aptitud_promedio[],
+            factibles[] (individuos factibles por generación), penalizacion (lambda),
+            mejor_aptitud, evaluaciones, desglose_costos.'
+      required:
+      - asignaciones
+      - duales
+      - duracion_ms
+      - estado
+      - factible
+      - mensajes
+      - metodo
+      - metricas
+      - objetivo
+      - verificacion
+    ResumenEscenarios:
+      type: object
+      properties:
+        escenarios:
+          type: integer
+        factibles_exacto:
+          type: integer
+        factibles_ag:
+          type: integer
+        ag_alcanza_optimo:
+          type: integer
+        gap_pct_promedio:
+          type: number
+          format: double
+          nullable: true
+        gap_pct_maximo:
+          type: number
+          format: double
+          nullable: true
+        tiempo_exacto_total_ms:
+          type: number
+          format: double
+        tiempo_ag_total_ms:
+          type: number
+          format: double
+        escenarios_con_cambio_de_base:
+          type: integer
+        escenarios_con_cambio_de_asignacion:
+          type: integer
+      required:
+      - ag_alcanza_optimo
+      - escenarios
+      - escenarios_con_cambio_de_asignacion
+      - escenarios_con_cambio_de_base
+      - factibles_ag
+      - factibles_exacto
+      - gap_pct_maximo
+      - gap_pct_promedio
+      - tiempo_ag_total_ms
+      - tiempo_exacto_total_ms
+    ResumenModelo:
+      type: object
+      properties:
+        empresas:
+          type: integer
+        plantas:
+          type: integer
+        rutas:
+          type: integer
+        oferta_total:
+          type: number
+          format: double
+        capacidad_total:
+          type: number
+          format: double
+        modo_oferta:
+          type: string
+      required:
+      - capacidad_total
+      - empresas
+      - modo_oferta
+      - oferta_total
+      - plantas
+      - rutas
+    ResumenSolucion:
+      type: object
+      properties:
+        estado:
+          type: string
+        factible:
+          type: boolean
+        objetivo:
+          type: number
+          format: double
+          nullable: true
+        duracion_ms:
+          type: number
+          format: double
+        mensajes:
+          type: array
+          items:
+            type: string
+        duales:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+      required:
+      - duracion_ms
+      - estado
+      - factible
+      - mensajes
+      - objetivo
+    RolEnum:
+      enum:
+      - administrador
+      - analista
+      type: string
+      description: |-
+        * `administrador` - Administrador
+        * `analista` - Analista
+    Ruta:
+      type: object
+      description: |-
+        ``empresa`` y ``planta`` se expresan con su ``codigo``.
+
+        Si se indican ``distancia_km`` y ``tarifa_km_ton``, ``costo_unitario`` = distancia x tarifa
+        (el valor enviado se ignora). Un ``costo_unitario`` solo, anula distancia y tarifa.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        empresa:
+          type: string
+        empresa_nombre:
+          type: string
+          readOnly: true
+        planta:
+          type: string
+        planta_nombre:
+          type: string
+          readOnly: true
+        distancia_km:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        distancia_fuente:
+          allOf:
+          - $ref: '#/components/schemas/DistanciaFuenteEnum'
+          readOnly: true
+        tarifa_km_ton:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          title: Tarifa (COP por t·km)
+        costo_unitario:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        limite:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          title: Límite de flujo (t/semana)
+        activa:
+          type: boolean
+        ficticio:
+          type: boolean
+          description: Dato de demostración FICTICIO.
+        tiene_trayecto:
+          type: boolean
+          readOnly: true
+          description: True si el trayecto por carretera ya está en caché.
+        aviso:
+          type: string
+          nullable: true
+          readOnly: true
+          description: 'Solo al crear: advertencia si la distancia tuvo que estimarse
+            (OSRM no disponible).'
+        creado_en:
+          type: string
+          format: date-time
+          readOnly: true
+        actualizado_en:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - actualizado_en
+      - aviso
+      - creado_en
+      - distancia_fuente
+      - empresa
+      - empresa_nombre
+      - id
+      - planta
+      - planta_nombre
+      - tiene_trayecto
+    RutaRequest:
+      type: object
+      description: |-
+        ``empresa`` y ``planta`` se expresan con su ``codigo``.
+
+        Si se indican ``distancia_km`` y ``tarifa_km_ton``, ``costo_unitario`` = distancia x tarifa
+        (el valor enviado se ignora). Un ``costo_unitario`` solo, anula distancia y tarifa.
+      properties:
+        empresa:
+          type: string
+          minLength: 1
+        planta:
+          type: string
+          minLength: 1
+        distancia_km:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        tarifa_km_ton:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          title: Tarifa (COP por t·km)
+        costo_unitario:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        limite:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          title: Límite de flujo (t/semana)
+        activa:
+          type: boolean
+        ficticio:
+          type: boolean
+          description: Dato de demostración FICTICIO.
+      required:
+      - empresa
+      - planta
+    SeleccionEnum:
+      enum:
+      - torneo
+      - ruleta
+      type: string
+      description: |-
+        * `torneo` - torneo
+        * `ruleta` - ruleta
+    SensibilidadResultado:
+      type: object
+      properties:
+        base:
+          $ref: '#/components/schemas/BaseSensibilidad'
+        precios_sombra:
+          $ref: '#/components/schemas/PreciosSombra'
+        rangos:
+          $ref: '#/components/schemas/Rangos'
+        plantas:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalisisPlanta'
+        escenarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/EscenarioSensibilidad'
+        resumen:
+          $ref: '#/components/schemas/ResumenEscenarios'
+        configuracion_ag:
+          allOf:
+          - $ref: '#/components/schemas/ConfigAG'
+          nullable: true
+        duracion_total_ms:
+          type: number
+          format: double
+        nota:
+          type: string
+      required:
+      - base
+      - configuracion_ag
+      - duracion_total_ms
+      - escenarios
+      - nota
+      - plantas
+      - precios_sombra
+      - rangos
+      - resumen
+    SensibilidadSolicitudRequest:
+      type: object
+      properties:
+        escenario_id:
+          type: integer
+          description: Usa la instantánea de un escenario guardado en vez de la red
+            actual.
+        guardar:
+          type: boolean
+          default: true
+          description: Registrar la ejecución en el historial.
+        variaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/VariacionRequest'
+        incluir_ag:
+          type: boolean
+          default: true
+          description: Resuelve cada escenario también con el AG (gap % y tiempos).
+            false = solo exacto.
+        config_ag:
+          $ref: '#/components/schemas/ConfigAGRequest'
+      required:
+      - variaciones
+    SolucionReporte:
+      type: object
+      properties:
+        estado:
+          type: string
+        factible:
+          type: boolean
+        objetivo:
+          type: number
+          format: double
+          nullable: true
+        duracion_ms:
+          type: number
+          format: double
+        mensajes:
+          type: array
+          items:
+            type: string
+        duales:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+        asignaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asignacion'
+        convergencia:
+          type: array
+          items:
+            type: number
+            format: double
+          description: Mejor costo por generación.
+        convergencia_promedio:
+          type: array
+          items:
+            type: number
+            format: double
+          description: Costo penalizado promedio por generación.
+      required:
+      - asignaciones
+      - duracion_ms
+      - estado
+      - factible
+      - mensajes
+      - objetivo
+    TamanoRedRequest:
+      type: object
+      properties:
+        empresas:
+          type: integer
+          maximum: 200
+          minimum: 1
+        plantas:
+          type: integer
+          maximum: 50
+          minimum: 1
+      required:
+      - empresas
+      - plantas
+    TipoCruceEnum:
+      enum:
+      - un_punto
+      - dos_puntos
+      type: string
+      description: |-
+        * `un_punto` - un_punto
+        * `dos_puntos` - dos_puntos
+    TipoDemandaEnum:
+      enum:
+      - capacity_max
+      - exact
+      - minimum
+      type: string
+      description: |-
+        * `capacity_max` - Capacidad máxima (<=)
+        * `exact` - Demanda exacta (=)
+        * `minimum` - Demanda mínima (>=)
+    TipoEnum:
+      enum:
+      - oferta
+      - capacidad
+      - costo
+      - combustible
+      type: string
+      description: |-
+        * `oferta` - oferta
+        * `capacidad` - capacidad
+        * `costo` - costo
+        * `combustible` - combustible
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    TrayectoRespuesta:
+      type: object
+      properties:
+        ruta_id:
+          type: integer
+        distancia_km:
+          type: number
+          format: double
+          nullable: true
+        distancia_fuente:
+          type: string
+        fuente:
+          type: string
+          description: carretera = geometría de OSRM; estimada = línea recta de respaldo
+            (no se cachea).
+        cacheado:
+          type: boolean
+        trayecto:
+          description: GeoJSON LineString; coordinates = [[lon, lat], ...].
+        aviso:
+          type: string
+          nullable: true
+      required:
+      - aviso
+      - cacheado
+      - distancia_fuente
+      - distancia_km
+      - fuente
+      - ruta_id
+      - trayecto
+    TrayectosRespuesta:
+      type: object
+      properties:
+        trayectos:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrayectoRespuesta'
+      required:
+      - trayectos
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          title: Nombre de usuario
+          description: 'Requerido. 150 carácteres como máximo. Únicamente letras,
+            dígitos y @/./+/-/_ '
+        nombre_completo:
+          type: string
+          readOnly: true
+        first_name:
+          type: string
+          readOnly: true
+          title: Nombre
+        last_name:
+          type: string
+          readOnly: true
+          title: Apellidos
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Dirección de correo electrónico
+        rol:
+          allOf:
+          - $ref: '#/components/schemas/RolEnum'
+          readOnly: true
+      required:
+      - email
+      - first_name
+      - id
+      - last_name
+      - nombre_completo
+      - rol
+      - username
+    UsuarioCrearRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          title: Nombre de usuario
+          description: 'Requerido. 150 carácteres como máximo. Únicamente letras,
+            dígitos y @/./+/-/_ '
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        first_name:
+          type: string
+          title: Nombre
+          maxLength: 150
+        last_name:
+          type: string
+          title: Apellidos
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          default: ''
+        rol:
+          allOf:
+          - $ref: '#/components/schemas/RolEnum'
+          default: analista
+        activo:
+          type: boolean
+          default: true
+      required:
+      - password
+      - username
+    UsuarioGestion:
+      type: object
+      description: Usuario tal como lo ve el administrador. Nunca incluye contraseña
+        ni hash.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          title: Nombre de usuario
+          description: 'Requerido. 150 carácteres como máximo. Únicamente letras,
+            dígitos y @/./+/-/_ '
+        first_name:
+          type: string
+          readOnly: true
+          title: Nombre
+        last_name:
+          type: string
+          readOnly: true
+          title: Apellidos
+        nombre_completo:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Dirección de correo electrónico
+        rol:
+          allOf:
+          - $ref: '#/components/schemas/RolEnum'
+          readOnly: true
+        activo:
+          type: boolean
+          readOnly: true
+        ultimo_acceso:
+          type: string
+          format: date-time
+          readOnly: true
+        fecha_creacion:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - activo
+      - email
+      - fecha_creacion
+      - first_name
+      - id
+      - last_name
+      - nombre_completo
+      - rol
+      - ultimo_acceso
+      - username
+    VariacionRequest:
+      type: object
+      properties:
+        tipo:
+          allOf:
+          - $ref: '#/components/schemas/TipoEnum'
+          description: |-
+            oferta | capacidad (cuello de botella si es negativa; varias plantas a la vez) | costo (transporte de rutas) | combustible (% sobre la tarifa km-ton de las rutas).
+
+            * `oferta` - oferta
+            * `capacidad` - capacidad
+            * `costo` - costo
+            * `combustible` - combustible
+        ids:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          description: 'Códigos afectados: empresas (oferta), plantas (capacidad)
+            o rutas ''E1->P2'' (costo, combustible). Vacío = todos. Para ''varias
+            plantas'' liste sus códigos.'
+        porcentajes:
+          type: array
+          items:
+            type: number
+            format: double
+            maximum: 1000
+            minimum: -100
+          description: Variaciones porcentuales; cada una genera un escenario reoptimizado.
+          maxItems: 40
+          minItems: 1
+      required:
+      - porcentajes
+      - tipo
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+tags:
+- name: auth
+  description: Autenticación JWT, perfil propio y cambio de contraseña.
+- name: usuarios
+  description: Gestión de usuarios (solo administrador).
+- name: red
+  description: Empresas, plantas, rutas y matriz de costos.
+- name: optimizacion
+  description: Ejecución de solvers, sensibilidad y reporte comparativo.
+- name: escenarios
+  description: Escenarios guardados.
+- name: ejecuciones
+  description: Historial de ejecuciones.
+- name: demo
+  description: Datos de demostración FICTICIOS.

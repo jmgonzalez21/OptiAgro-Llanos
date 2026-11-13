@@ -1,0 +1,278 @@
+/* Clases globales mínimas para las pantallas de gestión y análisis (tablas, formularios, resultados). */
+.vista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-4);
+  min-width: 0;
+}
+
+.vista__seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+}
+
+.vista h2 {
+  font-size: var(--texto-lg);
+}
+
+.vista h3 {
+  font-size: var(--texto-base);
+}
+
+.herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio-3);
+}
+
+.herramientas__crece {
+  flex: 1 1 14rem;
+}
+
+.formulario-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--espacio-3);
+}
+
+.fila-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  align-items: center;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--texto-sm);
+}
+
+.tabla caption {
+  padding: var(--espacio-2) var(--espacio-3);
+  text-align: left;
+  font-weight: var(--peso-fuerte);
+  color: var(--color-texto-2);
+}
+
+.tabla th,
+.tabla td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-borde);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.tabla thead th {
+  background: var(--color-superficie-2);
+  font-weight: var(--peso-fuerte);
+  color: var(--color-texto-2);
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tabla tbody tr:hover {
+  background: var(--color-superficie-hover);
+}
+
+.tabla .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla tr.fila-inactiva td {
+  color: var(--color-texto-suave);
+}
+
+.tabla--entrada input {
+  width: 7rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-sm);
+  background: var(--color-superficie);
+  text-align: right;
+}
+
+.tabla--entrada input.celda-cambiada {
+  background: var(--color-aviso-fondo);
+  border-color: var(--color-aviso);
+}
+
+.tabla--entrada input:disabled {
+  background: var(--color-superficie-2);
+  border-color: var(--color-borde);
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--espacio-3);
+}
+
+.kpi {
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.kpi__etiqueta {
+  display: block;
+  font-size: var(--texto-xs);
+  color: var(--color-texto-suave);
+}
+
+.kpi__valor {
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-fuerte);
+  font-variant-numeric: tabular-nums;
+}
+
+.nota {
+  font-size: var(--texto-sm);
+  color: var(--color-texto-suave);
+}
+
+.etiqueta-nativa {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-medio);
+}
+
+.etiqueta-nativa input {
+  min-height: var(--alto-tactil);
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.grafico-linea {
+  width: 100%;
+  max-width: 40rem;
+  height: auto;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.valor-clave {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  padding: 0.5rem 0.75rem;
+  border: 1px dashed var(--color-borde-fuerte);
+  border-radius: var(--radio-sm);
+  background: var(--color-superficie-2);
+  user-select: all;
+}
+
+@media (max-width: 640px) {
+  .herramientas__crece {
+    flex-basis: 100%;
+  }
+}
+
+/* ---- Bloques plegables ("Opciones avanzadas", "¿Qué significa?") ---- */
+details.avanzadas {
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  padding: 0 var(--espacio-4);
+}
+
+details.avanzadas > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: var(--alto-tactil);
+  cursor: pointer;
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-fuerte);
+  color: var(--color-texto-2);
+  list-style: none;
+}
+
+details.avanzadas > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.avanzadas > summary::before {
+  content: '▸';
+  display: inline-block;
+  transition: transform var(--trans-rapida) var(--ease);
+}
+
+details.avanzadas[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+details.avanzadas[open] {
+  padding-bottom: var(--espacio-4);
+}
+
+details.avanzadas > summary:focus-visible {
+  outline: 2px solid var(--color-foco);
+  outline-offset: 2px;
+  border-radius: var(--radio-sm);
+}
+
+details.avanzadas > :not(summary) {
+  margin-top: var(--espacio-2);
+}
+
+details.avanzadas--simple {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+details.avanzadas--simple > summary {
+  min-height: 2rem;
+  color: var(--color-primario);
+}
+
+/* Semáforo (verde / ámbar / rojo) con texto: el significado nunca depende solo del color */
+.semaforo {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  flex: none;
+}
+
+.semaforo--verde {
+  background: var(--color-activo-barra);
+}
+
+.semaforo--ambar {
+  background: var(--color-aviso);
+}
+
+.semaforo--rojo {
+  background: var(--color-error);
+}
+
+.ayuda-pantalla {
+  max-width: 46rem;
+  font-size: var(--texto-sm);
+  color: var(--color-texto-2);
+}
+
+@media print {
+  details.avanzadas > summary::before {
+    display: none;
+  }
+}

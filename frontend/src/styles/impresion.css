@@ -1,0 +1,211 @@
+/*
+ * OptiAgro-Llanos · Estilos de impresión (vista de reporte / Guardar como PDF).
+ * Fondo blanco, sin navegación, tablas y gráficos legibles en blanco y negro.
+ * Utilidades: `.no-imprimir` (ocultar), `.solo-imprimir` (mostrar solo al imprimir: encabezado/pie),
+ * `.imprimir-bloque` (no cortar entre páginas), `.imprimir-salto` (salto de página antes).
+ */
+.solo-imprimir {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm 14mm 18mm;
+  }
+
+  :root,
+  :root[data-theme='dark'] {
+    color-scheme: light;
+    --color-fondo: #ffffff;
+    --color-fondo-degradado: none;
+    --color-superficie: #ffffff;
+    --color-superficie-2: #f2f2f2;
+    --color-borde: #bdbdbd;
+    --color-borde-fuerte: #8a8a8a;
+    --color-borde-control: #5f5f5f;
+    --color-texto: #000000;
+    --color-texto-2: #1f1f1f;
+    --color-texto-suave: #3a3a3a;
+    --color-primario: #14532d;
+    --color-enlace: #000000;
+    --color-activo-fondo: #ffffff;
+    --color-activo-texto: #000000;
+    --color-acento: #e4e4e4;
+    --color-acento-suave: #f2f2f2;
+    --color-error: #8f1a10;
+    --color-error-fondo: #ffffff;
+    --color-aviso: #5c3207;
+    --color-aviso-fondo: #ffffff;
+    --color-info: #14425f;
+    --color-info-fondo: #ffffff;
+    --color-exito: #14532d;
+    --color-exito-fondo: #ffffff;
+    --grafico-cat-1: #1f6b43;
+    --grafico-cat-2: #1d5c8a;
+    --grafico-cat-3: #b45309;
+    --grafico-cat-4: #7e3fa8;
+    --grafico-cat-5: #be123c;
+    --grafico-cat-6: #0e7490;
+    --grafico-referencia: #333333;
+    --grafico-mas-cuesta: #8f1a10;
+    --grafico-ahorra: #14532d;
+    --grafico-banda: #ececec;
+    --grafico-banda-borde: #6b6b6b;
+    --grafico-rejilla: #c8c8c8;
+    --grafico-eje: #4a4a4a;
+    --grafico-texto: #000000;
+    --grafico-fondo: #ffffff;
+    --grafico-sec-1: #ffffff;
+    --grafico-sec-2: #eeeeee;
+    --grafico-sec-3: #dcdcdc;
+    --grafico-sec-4: #c8c8c8;
+    --grafico-sec-5: #b4b4b4;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+    min-height: 0;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Navegación y cromo de la aplicación */
+  .lateral,
+  .barra,
+  .app-layout__saltar,
+  .app-layout__velo,
+  .no-imprimir,
+  .ui-toast-region,
+  .ui-tooltip__globo,
+  .ui-toolbar,
+  .ui-paginacion,
+  dialog:not([open]) {
+    display: none !important;
+  }
+
+  .solo-imprimir {
+    display: block;
+  }
+
+  .app-layout {
+    display: block !important;
+    min-height: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .app-layout__columna,
+  .app-layout__contenido {
+    display: block !important;
+    padding: 0 !important;
+    min-width: 0;
+  }
+
+  #app {
+    min-height: 0;
+  }
+
+  /* Sin sombras, sin vidrio, sin animación */
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Bloques que no deben partirse */
+  .imprimir-bloque,
+  .ui-tarjeta,
+  .ui-metrica,
+  .ui-grafico,
+  figure,
+  tr,
+  .ui-rango__fila {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .imprimir-salto {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Tablas: texto negro, bordes finos, sin scroll recortado, cabecera repetida */
+  .ui-tabla__marco,
+  .ui-grid__marco,
+  .ui-tabla__desplazable {
+    overflow: visible !important;
+    max-height: none !important;
+    border-color: #8a8a8a !important;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  th,
+  td {
+    border: 0.5pt solid #8a8a8a !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    position: static !important;
+  }
+
+  th {
+    background: #ececec !important;
+    font-weight: 700;
+  }
+
+  /* Gráficos: bloques con borde, <details> abiertos para imprimir la tabla alternativa */
+  .ui-grafico__datos {
+    display: block !important;
+  }
+
+  .ui-grafico__datos > :not(summary) {
+    display: block !important;
+  }
+
+  .ui-grafico__datos > summary {
+    display: none;
+  }
+
+  .ui-grafico__lienzo {
+    overflow: visible !important;
+  }
+
+  /* Enlaces: mostrar la URL */
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 9pt;
+    word-break: break-all;
+  }
+
+  /* Tarjetas y alertas: borde sólido legible en blanco y negro */
+  .ui-tarjeta,
+  .ui-metrica,
+  .ui-alerta {
+    border: 0.75pt solid #5f5f5f !important;
+    background: #ffffff !important;
+  }
+}

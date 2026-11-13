@@ -1,0 +1,684 @@
+{
+ "cp01": {
+  "exacto": 64.0,
+  "estado": "OPTIMAL",
+  "asign": [
+   [
+    "E1",
+    "P1",
+    12.0
+   ],
+   [
+    "E2",
+    "P2",
+    8.0
+   ]
+  ],
+  "ag": 64.0,
+  "ag_estado": "FEASIBLE"
+ },
+ "demo_modelo": {
+  "empresas": 10,
+  "plantas": 4,
+  "rutas": 40,
+  "oferta": 115.0,
+  "capacidad": 136.0,
+  "ofertas": [
+   11.0,
+   12.0,
+   13.0,
+   10.0,
+   11.0,
+   12.0,
+   13.0,
+   10.0,
+   11.0,
+   12.0
+  ],
+  "capacidades": [
+   40.0,
+   32.0,
+   30.0,
+   34.0
+  ],
+  "operacion": [
+   1000.0,
+   1500.0,
+   2000.0,
+   2500.0
+  ]
+ },
+ "exacto": {
+  "estado": "OPTIMAL",
+  "objetivo": 2051515.0,
+  "ms_mediana": 1.5448144995389157,
+  "ms_min": 0.9746270006871782,
+  "ms_max": 2.667556000233162,
+  "mensaje": [
+   "Optimization terminated successfully. (HiGHS Status 7: Optimal)"
+  ],
+  "desglose": {
+   "transporte": 1846515.0,
+   "operacion": 205000.0,
+   "precio": 0.0,
+   "total": 2051515.0
+  },
+  "duales": {
+   "oferta:E1": 8300.0,
+   "oferta:E2": 20450.0,
+   "oferta:E3": 11875.0,
+   "oferta:E4": 15170.0,
+   "oferta:E5": 18650.0,
+   "oferta:E6": 20135.0,
+   "oferta:E7": 13180.0,
+   "oferta:E8": 10370.0,
+   "oferta:E9": 22370.0,
+   "oferta:E10": 40130.0,
+   "planta:P1": -0.0,
+   "planta:P2": -50.0,
+   "planta:P3": -0.0,
+   "planta:P4": -1150.0
+  },
+  "verificacion": {
+   "valida": true,
+   "errores": [],
+   "violacion_maxima": 0.0
+  },
+  "asignaciones": [
+   [
+    "E1",
+    "P2",
+    11.0
+   ],
+   [
+    "E2",
+    "P2",
+    10.0
+   ],
+   [
+    "E2",
+    "P4",
+    2.0
+   ],
+   [
+    "E3",
+    "P1",
+    13.0
+   ],
+   [
+    "E4",
+    "P4",
+    10.0
+   ],
+   [
+    "E5",
+    "P2",
+    11.0
+   ],
+   [
+    "E6",
+    "P3",
+    12.0
+   ],
+   [
+    "E7",
+    "P1",
+    13.0
+   ],
+   [
+    "E8",
+    "P3",
+    10.0
+   ],
+   [
+    "E9",
+    "P4",
+    11.0
+   ],
+   [
+    "E10",
+    "P3",
+    1.0
+   ],
+   [
+    "E10",
+    "P4",
+    11.0
+   ]
+  ],
+  "uso_plantas": {
+   "P1": 26.0,
+   "P2": 32.0,
+   "P3": 23.0,
+   "P4": 34.0
+  }
+ },
+ "ag_defecto": {
+  "objetivo": 2051515.0,
+  "estado": "FEASIBLE",
+  "ms": 362.579292999726,
+  "gap": 0.0,
+  "evaluaciones": 8702,
+  "config": {
+   "poblacion": 60,
+   "generaciones": 150,
+   "cruce": 0.8,
+   "mutacion": 0.12,
+   "semilla": 42,
+   "elitismo": 2,
+   "seleccion": "torneo",
+   "tipo_cruce": "un_punto",
+   "tamano_torneo": 3,
+   "inicializacion": "aleatoria"
+  },
+  "conv_muestra": [
+   [
+    0,
+    2701355.0
+   ],
+   [
+    10,
+    2082605.0
+   ],
+   [
+    20,
+    2051515.0
+   ],
+   [
+    30,
+    2051515.0
+   ],
+   [
+    40,
+    2051515.0
+   ],
+   [
+    50,
+    2051515.0
+   ],
+   [
+    60,
+    2051515.0
+   ],
+   [
+    70,
+    2051515.0
+   ],
+   [
+    80,
+    2051515.0
+   ],
+   [
+    90,
+    2051515.0
+   ],
+   [
+    100,
+    2051515.0
+   ],
+   [
+    110,
+    2051515.0
+   ],
+   [
+    120,
+    2051515.0
+   ],
+   [
+    130,
+    2051515.0
+   ],
+   [
+    140,
+    2051515.0
+   ],
+   [
+    149,
+    2051515.0
+   ]
+  ],
+  "conv_prom_muestra": [
+   [
+    0,
+    3369234.8333333335
+   ],
+   [
+    10,
+    2501170.0
+   ],
+   [
+    20,
+    2335527.0
+   ],
+   [
+    30,
+    2380640.75
+   ],
+   [
+    40,
+    2385700.25
+   ],
+   [
+    50,
+    2297795.8333333335
+   ],
+   [
+    60,
+    2394338.25
+   ],
+   [
+    70,
+    2393180.25
+   ],
+   [
+    80,
+    2390801.6666666665
+   ],
+   [
+    90,
+    2401425.0833333335
+   ],
+   [
+    100,
+    2416942.5833333335
+   ],
+   [
+    110,
+    2321034.9166666665
+   ],
+   [
+    120,
+    2293024.75
+   ],
+   [
+    130,
+    2346429.75
+   ],
+   [
+    140,
+    2343607.5
+   ],
+   [
+    149,
+    2343887.0833333335
+   ]
+  ],
+  "factibles_gen0": 60,
+  "factibles_final": 60,
+  "penalizacion": 57467560.0
+ },
+ "ag_series": {
+  "torneo_1punto": {
+   "gap_media": 0.05327769965123336,
+   "gap_min": 0.0,
+   "gap_max": 0.166218623797535,
+   "gaps": [
+    0.0,
+    0.166218623797535,
+    0.017060562559864295,
+    0.017060562559864295,
+    0.0,
+    0.166218623797535,
+    0.166218623797535,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "ms_media": 321.90200539989746,
+   "obj_min": 2051515.0,
+   "obj_max": 2054925.0
+  },
+  "ruleta_1punto": {
+   "gap_media": 0.05327769965123336,
+   "gap_min": 0.0,
+   "gap_max": 0.166218623797535,
+   "gaps": [
+    0.0,
+    0.017060562559864295,
+    0.0,
+    0.0,
+    0.166218623797535,
+    0.166218623797535,
+    0.0,
+    0.166218623797535,
+    0.017060562559864295,
+    0.0
+   ],
+   "ms_media": 280.85108080031205,
+   "obj_min": 2051515.0,
+   "obj_max": 2054925.0
+  },
+  "torneo_2puntos": {
+   "gap_media": 0.021740031147712786,
+   "gap_min": 0.0,
+   "gap_max": 0.166218623797535,
+   "gaps": [
+    0.0,
+    0.017060562559864295,
+    0.0,
+    0.0,
+    0.017060562559864295,
+    0.0,
+    0.0,
+    0.166218623797535,
+    0.0,
+    0.017060562559864295
+   ],
+   "ms_media": 316.64218889982294,
+   "obj_min": 2051515.0,
+   "obj_max": 2054925.0
+  },
+  "ruleta_2puntos": {
+   "gap_media": 0.08652142441074036,
+   "gap_min": 0.0,
+   "gap_max": 0.166218623797535,
+   "gaps": [
+    0.0,
+    0.166218623797535,
+    0.166218623797535,
+    0.166218623797535,
+    0.017060562559864295,
+    0.166218623797535,
+    0.166218623797535,
+    0.0,
+    0.017060562559864295,
+    0.0
+   ],
+   "ms_media": 331.716000200322,
+   "obj_min": 2051515.0,
+   "obj_max": 2054925.0
+  },
+  "heuristica": {
+   "gap_media": 0.0,
+   "gap_min": 0.0,
+   "gap_max": 0.0,
+   "gaps": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "ms_media": 275.5536160002521,
+   "obj_min": 2051515.0,
+   "obj_max": 2051515.0
+  }
+ },
+ "sens": {
+  "precios_sombra": {
+   "empresas": {
+    "E1": 8300.0,
+    "E2": 20450.0,
+    "E3": 11875.0,
+    "E4": 15170.0,
+    "E5": 18650.0,
+    "E6": 20135.0,
+    "E7": 13180.0,
+    "E8": 10370.0,
+    "E9": 22370.0,
+    "E10": 40130.0
+   },
+   "plantas": {
+    "P1": -0.0,
+    "P2": -50.0,
+    "P3": -0.0,
+    "P4": -1150.0
+   }
+  },
+  "resumen": {
+   "escenarios": 5,
+   "factibles_exacto": 5,
+   "factibles_ag": 5,
+   "ag_alcanza_optimo": 4,
+   "gap_pct_promedio": 0.0023135352553814545,
+   "gap_pct_maximo": 0.011567676276926866,
+   "tiempo_exacto_total_ms": 6.276156000240007,
+   "tiempo_ag_total_ms": 1469.212799998786,
+   "escenarios_con_cambio_de_base": 4,
+   "escenarios_con_cambio_de_asignacion": 4
+  },
+  "escenarios": [
+   {
+    "nombre": "combustible +10% (todas)",
+    "estado_exacto": "OPTIMAL",
+    "estado_ag": "FEASIBLE",
+    "costo_exacto": 2236166.5,
+    "costo_ag": 2236166.5,
+    "gap_pct": 0.0,
+    "tiempo_exacto_ms": 1.2123970009270124,
+    "tiempo_ag_ms": 274.64538300046115,
+    "base_cambio": false,
+    "asignaciones_cambiadas": 0,
+    "variacion_objetivo_pct": 9.00073847863652
+   },
+   {
+    "nombre": "combustible +20% (todas)",
+    "estado_exacto": "OPTIMAL",
+    "estado_ag": "FEASIBLE",
+    "costo_exacto": 2420538.0,
+    "costo_ag": 2420818.0,
+    "gap_pct": 0.011567676276926866,
+    "tiempo_exacto_ms": 1.086637001208146,
+    "tiempo_ag_ms": 296.36664199824736,
+    "base_cambio": true,
+    "asignaciones_cambiadas": 4,
+    "variacion_objetivo_pct": 17.98782850722515
+   },
+   {
+    "nombre": "oferta -10% (todas)",
+    "estado_exacto": "OPTIMAL",
+    "estado_ag": "FEASIBLE",
+    "costo_exacto": 1842578.5,
+    "costo_ag": 1842578.5,
+    "gap_pct": 0.0,
+    "tiempo_exacto_ms": 0.9846329994616099,
+    "tiempo_ag_ms": 276.1924970000109,
+    "base_cambio": true,
+    "asignaciones_cambiadas": 12,
+    "variacion_objetivo_pct": -10.184497797968818
+   },
+   {
+    "nombre": "oferta +15% (todas)",
+    "estado_exacto": "OPTIMAL",
+    "estado_ag": "FEASIBLE",
+    "costo_exacto": 2376523.25,
+    "costo_ag": 2376523.2499999995,
+    "gap_pct": -1.959422392807389e-14,
+    "tiempo_exacto_ms": 1.7525479997857474,
+    "tiempo_ag_ms": 321.22902300034184,
+    "base_cambio": true,
+    "asignaciones_cambiadas": 13,
+    "variacion_objetivo_pct": 15.842353090277186
+   },
+   {
+    "nombre": "capacidad -30% (P3)",
+    "estado_exacto": "OPTIMAL",
+    "estado_ag": "FEASIBLE",
+    "costo_exacto": 2061515.0,
+    "costo_ag": 2061515.0,
+    "gap_pct": 0.0,
+    "tiempo_exacto_ms": 1.2399409988574916,
+    "tiempo_ag_ms": 300.7792549997248,
+    "base_cambio": true,
+    "asignaciones_cambiadas": 7,
+    "variacion_objetivo_pct": 0.4874446445675513
+   }
+  ],
+  "rangos_capacidad": [
+   {
+    "id": "P1",
+    "valor_actual": 40.0,
+    "precio_sombra": 0.0,
+    "activa": false,
+    "minimo": 26.0,
+    "maximo": null,
+    "objetivo_en_minimo": 2051515.0,
+    "objetivo_en_maximo": 2051515.0
+   },
+   {
+    "id": "P2",
+    "valor_actual": 32.0,
+    "precio_sombra": -50.0,
+    "activa": true,
+    "minimo": 25.0,
+    "maximo": 33.0,
+    "objetivo_en_minimo": 2051865.0,
+    "objetivo_en_maximo": 2051465.0
+   },
+   {
+    "id": "P3",
+    "valor_actual": 30.0,
+    "precio_sombra": 0.0,
+    "activa": false,
+    "minimo": 23.0,
+    "maximo": null,
+    "objetivo_en_minimo": 2051515.0,
+    "objetivo_en_maximo": 2051515.0
+   },
+   {
+    "id": "P4",
+    "valor_actual": 34.0,
+    "precio_sombra": -1150.0,
+    "activa": true,
+    "minimo": 27.0,
+    "maximo": 35.0,
+    "objetivo_en_minimo": 2059565.0,
+    "objetivo_en_maximo": 2050365.0
+   }
+  ],
+  "rangos_oferta": [
+   {
+    "id": "E1",
+    "valor_actual": 11.0,
+    "precio_sombra": 8300.0,
+    "activa": true,
+    "minimo": 10.0,
+    "maximo": 18.0,
+    "objetivo_en_minimo": 2043215.0,
+    "objetivo_en_maximo": 2109615.0
+   },
+   {
+    "id": "E2",
+    "valor_actual": 12.0,
+    "precio_sombra": 20450.0,
+    "activa": true,
+    "minimo": 11.0,
+    "maximo": 19.0,
+    "objetivo_en_minimo": 2031065.0,
+    "objetivo_en_maximo": 2194665.0
+   },
+   {
+    "id": "E3",
+    "valor_actual": 13.0,
+    "precio_sombra": 11875.0,
+    "activa": true,
+    "minimo": 0.0,
+    "maximo": 27.0,
+    "objetivo_en_minimo": 1897140.0,
+    "objetivo_en_maximo": 2217765.0
+   }
+  ],
+  "rangos_metodo": "highs_ranging",
+  "plantas": [
+   {
+    "planta": "P1",
+    "nombre": "Planta Villavicencio",
+    "tipo_demanda": "capacity_max",
+    "capacidad": 40.0,
+    "flujo": 26.0,
+    "utilizacion_pct": 65.0,
+    "precio_sombra": -0.0,
+    "cuello_de_botella": false
+   },
+   {
+    "planta": "P2",
+    "nombre": "Planta Restrepo",
+    "tipo_demanda": "capacity_max",
+    "capacidad": 32.0,
+    "flujo": 32.0,
+    "utilizacion_pct": 100.0,
+    "precio_sombra": -50.0,
+    "cuello_de_botella": true
+   },
+   {
+    "planta": "P3",
+    "nombre": "Planta Granada",
+    "tipo_demanda": "capacity_max",
+    "capacidad": 30.0,
+    "flujo": 23.0,
+    "utilizacion_pct": 76.66666666666667,
+    "precio_sombra": -0.0,
+    "cuello_de_botella": false
+   },
+   {
+    "planta": "P4",
+    "nombre": "Planta Puerto Gaitán",
+    "tipo_demanda": "capacity_max",
+    "capacidad": 34.0,
+    "flujo": 34.0,
+    "utilizacion_pct": 100.0,
+    "precio_sombra": -1150.0,
+    "cuello_de_botella": true
+   }
+  ]
+ },
+ "escal": [
+  {
+   "n": "10x4",
+   "rutas": 40,
+   "obj_ex": 2823128.338,
+   "ms_ex": 1.38365200109547,
+   "obj_ag": 2823128.338,
+   "ms_ag": 95.34642500148038,
+   "gap": 0.0,
+   "ratio": 68.90925241750986
+  },
+  {
+   "n": "20x6",
+   "rutas": 120,
+   "obj_ex": 4106782.73,
+   "ms_ex": 1.3869310005247826,
+   "obj_ag": 4242730.664,
+   "ms_ag": 249.10292999993544,
+   "gap": 3.3103269137396003,
+   "ratio": 179.60729834842587
+  },
+  {
+   "n": "40x10",
+   "rutas": 400,
+   "obj_ex": 6878820.242000001,
+   "ms_ex": 4.13535799998499,
+   "obj_ag": 7631062.883,
+   "ms_ag": 662.2789729990473,
+   "gap": 10.935634520684715,
+   "ratio": 160.1503359567542
+  },
+  {
+   "n": "80x16",
+   "rutas": 1280,
+   "obj_ex": 12773801.814000001,
+   "ms_ex": 13.69543600048928,
+   "obj_ag": 13578779.132999998,
+   "ms_ag": 2235.660442000153,
+   "gap": 6.3017833744511895,
+   "ratio": 163.24127555488428
+  }
+ ],
+ "escal_cfg": {
+  "poblacion": 40,
+  "generaciones": 80,
+  "cruce": 0.8,
+  "mutacion": 0.12,
+  "semilla": 42,
+  "elitismo": 2,
+  "seleccion": "torneo",
+  "tipo_cruce": "un_punto",
+  "tamano_torneo": 3,
+  "inicializacion": "heuristica"
+ }
+}

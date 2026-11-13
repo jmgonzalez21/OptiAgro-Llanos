@@ -1,0 +1,100 @@
+/*
+ * OptiAgro-Llanos · Tokens de visualización de datos (gráficos, mapa de calor).
+ * Método: paleta categórica elegida por distancia perceptual (OKLab) bajo simulación de
+ * deuteranopía, protanopía y tritanopía; contraste >= 3:1 de cada serie contra la superficie
+ * y contra superficie-2 (1.4.11), en claro y en oscuro. Aun así el significado NUNCA depende
+ * solo del color: cada serie lleva además forma de marcador, trazo/patrón y rótulo directo.
+ * Detalle y cifras de validación: docs/ui/guia-de-estilo.md (sección 9).
+ */
+:root {
+  /* Series categóricas (exacto = cat-1, AG = cat-2) */
+  --grafico-cat-1: #1f6b43;
+  --grafico-cat-2: #2f7fd0;
+  --grafico-cat-3: #d06a0c;
+  --grafico-cat-4: #7f3fb0;
+  --grafico-cat-5: #b8265f;
+  --grafico-cat-6: #0e7c86;
+
+  --grafico-exacto: var(--grafico-cat-1);
+  --grafico-ag: var(--grafico-cat-2);
+  --grafico-referencia: #5a6b60;
+  --grafico-mas-cuesta: #b42318;
+  --grafico-ahorra: #1f6b43;
+  --grafico-banda: #e6f4ea;
+  --grafico-banda-borde: #b0ddc3;
+
+  /* Estructura del gráfico */
+  --grafico-rejilla: #dfe9e2;
+  --grafico-eje: #7c9284;
+  --grafico-texto: #44574b;
+  --grafico-fondo: #ffffff;
+  --grafico-tooltip-fondo: #14231b;
+  --grafico-tooltip-texto: #f6fbf7;
+
+  /* Secuencial (mapa de calor: más intenso = más barato). Los números siempre visibles. */
+  --grafico-sec-1: #ecfbf2;
+  --grafico-sec-2: #d1f1de;
+  --grafico-sec-3: #b0e2c6;
+  --grafico-sec-4: #8ccfab;
+  --grafico-sec-5: #65bd90;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --grafico-cat-1: #9be5b6;
+    --grafico-cat-2: #72c1ff;
+    --grafico-cat-3: #ffb76c;
+    --grafico-cat-4: #b276e6;
+    --grafico-cat-5: #f76f99;
+    --grafico-cat-6: #4facb6;
+    --grafico-referencia: #9aada1;
+    --grafico-mas-cuesta: #ff9b8f;
+    --grafico-ahorra: #9be5b6;
+    --grafico-banda: #1d3a29;
+    --grafico-banda-borde: #3f8a5f;
+    --grafico-rejilla: #24352a;
+    --grafico-eje: #5f7a68;
+    --grafico-texto: #b6c9bc;
+    --grafico-fondo: #111b15;
+    --grafico-tooltip-fondo: #e8f5ec;
+    --grafico-tooltip-texto: #0b120e;
+    --grafico-sec-1: #192820;
+    --grafico-sec-2: #1e392b;
+    --grafico-sec-3: #234c37;
+    --grafico-sec-4: #265f44;
+    --grafico-sec-5: #287351;
+  }
+}
+
+:root[data-theme='dark'] {
+  --grafico-cat-1: #9be5b6;
+  --grafico-cat-2: #72c1ff;
+  --grafico-cat-3: #ffb76c;
+  --grafico-cat-4: #b276e6;
+  --grafico-cat-5: #f76f99;
+  --grafico-cat-6: #4facb6;
+  --grafico-referencia: #9aada1;
+  --grafico-mas-cuesta: #ff9b8f;
+  --grafico-ahorra: #9be5b6;
+  --grafico-banda: #1d3a29;
+  --grafico-banda-borde: #3f8a5f;
+  --grafico-rejilla: #24352a;
+  --grafico-eje: #5f7a68;
+  --grafico-texto: #b6c9bc;
+  --grafico-fondo: #111b15;
+  --grafico-tooltip-fondo: #e8f5ec;
+  --grafico-tooltip-texto: #0b120e;
+  --grafico-sec-1: #192820;
+  --grafico-sec-2: #1e392b;
+  --grafico-sec-3: #234c37;
+  --grafico-sec-4: #265f44;
+  --grafico-sec-5: #287351;
+}
+
+/* Capas nuevas (diálogos, paneles, notificaciones) */
+:root {
+  --z-modal-velo: 1300;
+  --z-modal: 1310;
+  --z-toast: 1500;
+  --z-tooltip: 1400;
+}

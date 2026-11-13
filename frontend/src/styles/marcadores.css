@@ -1,0 +1,30 @@
+/* Marcadores de estación (compartidos por el mapa y la leyenda). */
+.marcador {
+  background: transparent;
+  border: 0;
+}
+
+.marcador__svg {
+  display: block;
+  overflow: visible;
+}
+
+.marcador__base {
+  stroke: var(--color-marcador-borde);
+  stroke-width: 2.5;
+}
+
+.marcador--empresa .marcador__base {
+  fill: var(--color-marcador-empresa);
+}
+
+.marcador--planta .marcador__base {
+  fill: var(--color-marcador-planta);
+}
+
+.marcador__glifo {
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

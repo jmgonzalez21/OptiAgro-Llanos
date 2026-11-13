@@ -1,0 +1,210 @@
+/*
+ * Tema del mapa (Leaflet): marcadores, popup, atribución y foco.
+ * Se importa desde MapaRed.vue DESPUÉS de leaflet.css para ganar en la cascada.
+ */
+/* Suaviza el mapa base de OpenStreetMap para integrarlo con la paleta blanco/verde. */
+.leaflet-tile-pane {
+  filter: saturate(0.55) brightness(1.04) contrast(0.96);
+}
+
+.leaflet-container {
+  font-family: var(--fuente-base);
+  background: #e9efe9;
+}
+
+.leaflet-container:focus-visible {
+  box-shadow: none;
+  outline: 2px solid var(--color-foco);
+  outline-offset: -3px;
+}
+
+/* ---- Marcadores ---- */
+.leaflet-marker-icon.marcador:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.marcador__cuerpo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 50%;
+  transition: transform var(--trans);
+  filter: drop-shadow(0 3px 4px rgb(10 40 25 / 0.32));
+}
+
+.leaflet-marker-icon.marcador:hover .marcador__cuerpo,
+.leaflet-marker-icon.marcador:focus-visible .marcador__cuerpo {
+  transform: scale(1.12);
+}
+
+.leaflet-marker-icon.marcador:focus-visible .marcador__cuerpo .marcador__base {
+  stroke: var(--color-foco);
+  stroke-width: 4;
+}
+
+/* ---- Popup (ficha de estación) ---- */
+.leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: var(--radio-lg);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  box-shadow: var(--sombra-lg);
+  border: 1px solid var(--color-borde);
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  width: auto !important;
+  min-width: 15rem;
+  line-height: var(--altura-linea);
+  font-size: var(--texto-sm);
+}
+
+.leaflet-popup-tip {
+  background: var(--color-superficie);
+  box-shadow: var(--sombra-sm);
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  top: 0.65rem;
+  right: 0.65rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font: 400 1.25rem/1 var(--fuente-base);
+  color: var(--color-texto-suave);
+  border-radius: var(--radio-pleno);
+  transition: background var(--trans-rapida), color var(--trans-rapida);
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+  background: var(--color-superficie-2);
+  color: var(--color-texto);
+}
+
+.popup-estacion__cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-3);
+  padding: var(--espacio-4) 2.75rem var(--espacio-3) var(--espacio-4);
+  background: linear-gradient(180deg, var(--color-acento-suave), var(--color-superficie));
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.popup-estacion__icono {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  color: #ffffff;
+  box-shadow: var(--sombra-sm);
+}
+
+.popup-estacion__icono--empresa {
+  border-radius: 50%;
+  background: var(--color-marcador-empresa);
+}
+
+.popup-estacion__icono--planta {
+  border-radius: 12px;
+  background: var(--color-marcador-planta);
+}
+
+.popup-estacion__icono svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.popup-estacion__titulo {
+  margin: 0;
+  font-size: var(--texto-base);
+  font-weight: var(--peso-fuerte);
+  line-height: 1.25;
+  color: var(--color-texto);
+}
+
+.popup-estacion__chip {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.05rem 0.6rem;
+  border-radius: var(--radio-pleno);
+  background: var(--color-activo-fondo);
+  color: var(--color-activo-texto);
+  font-size: var(--texto-xs);
+  font-weight: var(--peso-fuerte);
+}
+
+.popup-estacion__datos {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem var(--espacio-4);
+  margin: 0;
+  padding: var(--espacio-3) var(--espacio-4) var(--espacio-4);
+}
+
+.popup-estacion__datos dt {
+  color: var(--color-texto-suave);
+  font-weight: var(--peso-medio);
+}
+
+.popup-estacion__datos dd {
+  margin: 0;
+  text-align: right;
+  font-weight: var(--peso-fuerte);
+  color: var(--color-texto);
+}
+
+.popup-estacion__nota {
+  margin: 0;
+  padding: 0.5rem var(--espacio-4);
+  background: var(--color-superficie-2);
+  border-top: 1px solid var(--color-borde);
+  color: var(--color-texto-suave);
+  font-size: var(--texto-xs);
+}
+
+/* ---- Atribución (obligatoria) ---- */
+.leaflet-control-attribution.leaflet-control {
+  margin: 0 0.75rem 0.6rem 0;
+  padding: 0.15rem 0.65rem;
+  border-radius: var(--radio-pleno);
+  background: var(--color-vidrio);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--color-texto-suave);
+  font-size: 0.6875rem;
+  box-shadow: var(--sombra-xs);
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-texto-2);
+}
+
+/* ---- Estación resaltada (tras "Ver en el mapa") ---- */
+.marcador--foco .marcador__cuerpo {
+  animation: marcador-pulso 1.1s ease-out 5;
+  border-radius: 50%;
+}
+
+@keyframes marcador-pulso {
+  0% {
+    box-shadow: 0 0 0 0 rgb(47 143 85 / 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 22px rgb(47 143 85 / 0);
+  }
+}
+
+/* ---- Líneas de flujo: ficha de ayuda flotante ---- */
+.flujo-tooltip {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
