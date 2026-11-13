@@ -1,0 +1,90 @@
+# OptiAgro-Llanos: UNA sola entrada. db (PostgreSQL 16) + backend (Django/gunicorn) + frontend (nginx + SPA Vue).
+# El navegador usa solo http://localhost:${FRONTEND_PORT:-8080}; nginx reenvía /api/ al backend.
+# Uso: copie .env.example a .env, ajuste los valores y ejecute `docker compose up -d --build`.
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-optiagro}
+      POSTGRES_USER: ${POSTGRES_USER:-optiagro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Defina DJANGO_SECRET_KEY en .env}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000,http://localhost:8080,http://127.0.0.1:8080}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      POSTGRES_DB: ${POSTGRES_DB:-optiagro}
+      POSTGRES_USER: ${POSTGRES_USER:-optiagro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      JWT_ACCESS_MINUTOS: ${JWT_ACCESS_MINUTOS:-30}
+      JWT_REFRESH_MINUTOS: ${JWT_REFRESH_MINUTOS:-1440}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-2}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-120}
+      # El admin de Django no forma parte de la aplicación presentada: apagado por defecto (/admin/ -> 404).
+      OPTIAGRO_ADMIN_HABILITADO: ${OPTIAGRO_ADMIN_HABILITADO:-false}
+      # true: al arrancar crea los usuarios demo y los datos FICTICIOS solo si no existen.
+      OPTIAGRO_CARGAR_DEMO: ${OPTIAGRO_CARGAR_DEMO:-false}
+      DEMO_ADMIN_USERNAME: ${DEMO_ADMIN_USERNAME:-admin_demo}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-}
+      DEMO_ANALISTA_USERNAME: ${DEMO_ANALISTA_USERNAME:-analista_demo}
+      DEMO_ANALISTA_PASSWORD: ${DEMO_ANALISTA_PASSWORD:-}
+      OPTIAGRO_MAX_EMPRESAS: ${OPTIAGRO_MAX_EMPRESAS:-200}
+      OPTIAGRO_MAX_PLANTAS: ${OPTIAGRO_MAX_PLANTAS:-50}
+      OPTIAGRO_MAX_RUTAS: ${OPTIAGRO_MAX_RUTAS:-2000}
+      OPTIAGRO_AG_MAX_POBLACION: ${OPTIAGRO_AG_MAX_POBLACION:-300}
+      OPTIAGRO_AG_MAX_GENERACIONES: ${OPTIAGRO_AG_MAX_GENERACIONES:-1000}
+      OPTIAGRO_AG_MAX_TRABAJO: ${OPTIAGRO_AG_MAX_TRABAJO:-20000000}
+      OPTIAGRO_SENSIBILIDAD_MAX_ESCENARIOS: ${OPTIAGRO_SENSIBILIDAD_MAX_ESCENARIOS:-40}
+      OPTIAGRO_ESCALABILIDAD_MAX_TAMANOS: ${OPTIAGRO_ESCALABILIDAD_MAX_TAMANOS:-8}
+      OPTIAGRO_ESCALABILIDAD_MAX_TRABAJO: ${OPTIAGRO_ESCALABILIDAD_MAX_TRABAJO:-60000000}
+      # Distancias por carretera (OSRM sobre OpenStreetMap). El servidor público es de uso razonable.
+      OPTIAGRO_OSRM_HABILITADO: ${OPTIAGRO_OSRM_HABILITADO:-true}
+      OPTIAGRO_OSRM_URL: ${OPTIAGRO_OSRM_URL:-https://router.project-osrm.org}
+      OPTIAGRO_OSRM_TIMEOUT: ${OPTIAGRO_OSRM_TIMEOUT:-10}
+    healthcheck:
+      test: ["CMD", "python", "healthcheck.py"]
+      interval: 10s
+      timeout: 6s
+      retries: 6
+      start_period: 40s
+    ports:
+      # Solo en loopback y para desarrollo (p. ej. `npm run dev`). Para una única entrada, elimine este bloque.
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  postgres_data:
